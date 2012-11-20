@@ -1,30 +1,39 @@
-Menu Management Module
-======================
+#Heyday Menu Manager
 
 The menu management module is for creating custom menu structures when the site
 tree hierarchy just won't do.
 
+##License
 
-Usage
-=====
+Flexible fields is licensed under an [MIT license](http://heyday.mit-license.org/)
 
+##Installation
 
-In templates
-------------
+###Non-composer
 
-	<% control MenuSet(YourMenuName) %>
-		<a href="$Link" class="$LinkingMode">$MenuTitle</a>
-	<% end_control %>
+To install just drop the silverstripe-menumanager directory into your SilverStripe root and run a /dev/build/?flush=1
 
+###Composer
 
-In the CMS
-----------
+Installing from composer is easy, 
 
+Create or edit a `composer.json` file in the root of your SilverStripe project, and make sure the following is present.
+
+```json
+{
+    "require": {
+        "heyday/silverstripe-menumanager": "*"
+    }
+}
+```
+
+After completing this step, navigate in Terminal or similar to the SilverStripe root directory and run `composer install` or `composer update` depending on whether or not you have composer already in use.
+
+##Usage
 There are 2 main steps to creating a menu using menu management.
 
 1. Create a new MenuSet
 2. Add MenuItems to that MenuSet
-
 
 ### Creating a MenuSet ###
 
@@ -78,3 +87,14 @@ Used to sort MenuItems when DataObjectManager is not in use.
 
 #### IsNewWindow ####
 Can be used as a check to see if 'target="_blank"' should be added to links.
+
+
+###Code guidelines
+
+This project follows the standards defined in:
+
+* [PSR-1](https://github.com/pmjones/fig-standards/blob/psr-1-style-guide/proposed/PSR-1-basic.md)
+* [PSR-2](https://github.com/pmjones/fig-standards/blob/psr-1-style-guide/proposed/PSR-2-advanced.md)
+
+
+
