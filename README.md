@@ -5,7 +5,7 @@ tree hierarchy just won't do.
 
 ##License
 
-Flexible fields is licensed under an [MIT license](http://heyday.mit-license.org/)
+Menu Manager is licensed under an [MIT license](http://heyday.mit-license.org/)
 
 ##Installation
 
