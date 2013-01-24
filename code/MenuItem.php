@@ -51,6 +51,8 @@ class MenuItem extends DataObject
 
         $fields->addFieldToTab('Root.Main', new CheckboxField('IsNewWindow', 'Open in a new window?'));
 
+        $this->extend('updateCMSFields', $fields);
+
         return $fields;
     }
 
