@@ -1,61 +1,79 @@
 <?php
 
+/**
+ * Class MenuItem
+ */
 class MenuItem extends DataObject
 {
-
+    /**
+     * @var array
+     */
     public static $db = array(
-        'MenuTitle'   => 'Varchar(255)', // If you want to customise the MenuTitle use this field - leaving blank will use MenuTitle of associated Page
-        'Link'        => 'Text',         // This field is used for external links (picking a page from the dropdown will overwrite this link)
-        'Sort'        => 'Int',          // Sort order
-        'IsNewWindow' => 'Boolean'       // Can be used as a check for adding target="_blank"
+        // If you want to customise the MenuTitle use this field - leaving blank will use MenuTitle of associated Page
+        'MenuTitle'   => 'Varchar(255)',
+        // This field is used for external links (picking a page from the dropdown will overwrite this link)
+        'Link'        => 'Text',
+        // Sort order
+        'Sort'        => 'Int',
+        // Can be used as a check for adding target="_blank"
+        'IsNewWindow' => 'Boolean'
     );
-
+    /**
+     * @var array
+     */
     public static $has_one = array(
         'Page'    => 'SiteTree', // page the MenuItem refers to
-        'MenuSet' => 'MenuSet'   // parent MenuSet
+        'MenuSet' => 'MenuSet' // parent MenuSet
     );
-
+    /**
+     * @var array
+     */
     public static $searchable_fields = array(
         'MenuTitle',
         'Page.Title'
     );
-
+    /**
+     * @var array
+     */
     public static $summary_fields = array(
-        'MenuTitle',
-        'Sort',
-        'Page.Title'
+        'Menu Title' => 'MenuTitle',
+        'Page Title' => 'Page.Title',
+        'Link',
+        'IsNewWindow'
     );
-
+    /**
+     * @var string
+     */
+    public static $default_sort = 'Sort';
+    /**
+     * @return FieldList
+     */
     public function getCMSFields()
     {
-        $fields = new FieldSet(
-            new TabSet('Root',
-                new Tab('Main')
+        $fields = new FieldList();
+
+        $fields->push(
+            new TextField('MenuTitle', 'Menu Title (will default to selected page title)')
+        );
+
+        $fields->push(
+            new DropdownField(
+                'PageID',
+                'Page',
+                array('' => '--- Select One ---') + Page::get()->sort('Title ASC')->map('ID', 'MenuTitle')->toArray()
             )
         );
 
-        $fields->addFieldToTab('Root.Main', new TextField('MenuTitle', 'Menu Title'));
-        $fields->addFieldToTab('Root.Main', new TextField('Link', 'Link'));
-
-        $pages = DataObject::get('Page', '', 'Title ASC');
-        $pages = $pages->toDropDownMap('ID', 'MenuTitle');
-        $pages = array('' => '--- Select One ---') + $pages;
-
-        $pageDropdown = new DropdownField('PageID', 'Page', $pages);
-
-        $fields->addFieldToTab('Root.Main', $pageDropdown);
-
-        if (class_exists('DataObjectManager')) {
-            $fields->addFieldToTab('Root.Main', new TextField('Sort', 'Sort'));
-        }
-
-        $fields->addFieldToTab('Root.Main', new CheckboxField('IsNewWindow', 'Open in a new window?'));
+        $fields->push(new TextField('Link', 'Link (use when not specifying a page)'));
+        $fields->push(new CheckboxField('IsNewWindow', 'Open in a new window?'));
 
         $this->extend('updateCMSFields', $fields);
 
         return $fields;
     }
-
+    /**
+     * @return mixed
+     */
     public function Parent()
     {
         return $this->MenuSet();
@@ -88,7 +106,6 @@ class MenuItem extends DataObject
             }
         }
     }
-
     /**
      * Checks to see if a page has been chosen and if so sets Link to null
      * This means that used in conjunction with the __get method above
@@ -103,32 +120,4 @@ class MenuItem extends DataObject
             $this->Link = null;
         }
     }
-
-    /**
-     * No idea what this is for
-     *
-     * @return string
-     */
-    public function CurrentInSection()
-    {
-        if ($this->Page()->isSection() && !$this->Overview) {
-            return "current section";
-        }
-    }
-
-    /**
-     * This method attempts to find a MenuSet with the same Name as this MenuItems MenuTitle.
-     * So if you want to nest MenuSets that would be the way to do it
-     *
-     * @return ComponentSet
-     */
-    public function MenuSetChildren()
-    {
-        $name    = str_replace('-', ' ', str_replace("'", "\'", $this->MenuTitle));
-        $menuSet = DataObject::get_one('MenuSet', "`MenuSet`.`Name` = '" . $name . "'");
-        $sort    = class_exists('DataObjectManager') ? '`SortOrder` ASC' : '`Sort` ASC';
-
-        return ($menuSet instanceof MenuSet) ? $menuSet->MenuItems(null, $sort) : false;
-    }
-
 }

@@ -1,7 +1,8 @@
 #Heyday Menu Manager
 
-The menu management module is for creating custom menu structures when the site
-tree hierarchy just won't do.
+The menu management module is for creating custom menu structures when the site tree hierarchy just won't do.
+
+The current version supports SilverStripe only, see the 1.0 branch for a SilverStripe 2.4 compatible version.
 
 ##License
 
@@ -22,7 +23,7 @@ Create or edit a `composer.json` file in the root of your SilverStripe project, 
 ```json
 {
     "require": {
-        "heyday/silverstripe-menumanager": "*"
+        "heyday/silverstripe-menumanager": "2.0.*"
     }
 }
 ```
@@ -35,45 +36,30 @@ There are 2 main steps to creating a menu using menu management.
 1. Create a new MenuSet
 2. Add MenuItems to that MenuSet
 
-### Creating a MenuSet ###
+### Creating a MenuSet
 
 This is pretty straight forward. You just give the MenuSet a Name (which is what
 you reference in the templates when controlling the menu)
 
 
-### Creating MenuItems ###
+### Creating MenuItems
 
 Once you have saved your MenuSet you can add MenuItems.
 
-MenuItems have 5 important fields:
+MenuItems have 4 important fields:
 
 1. Page
 2. MenuTitle
 3. Link
-4. Sort
-5. IsNewWindow
+4. IsNewWindow
 
-
-#### Page ####
+#### Page
 A page to associate your MenuItem with.
 
+#### MenuTitle
+This field can be left blank if you link the menu item with a page. If not fill with the title you want to display in the template.
 
-#### MenuTitle ####
-You can enter a custom MenuTitle in this field. If left blank the MenuTitle will
-automatically be pulled from the associated Page.
-A hidden feature of this field is that if you name the MenuTitle the same as a
-different MenuSets Name then you can use the MenuSetChildren method to have
-nested MenuSets. Example:
-
-	<% control MenuSet(YourMenuName) %>
-		<a href="$Link" class="$LinkingMode">$MenuTitle</a>
-		<% control MenuSetChildren %>
-			<a href="$Link" class="$LinkingMode">$MenuTitle</a>
-		<% end_control %>
-	<% end_control %>
-
-
-#### Link ####
+#### Link
 This field can be left blank unless you want to link to an external website.
 When left blank using $Link in templates will automatically pull the link from
 the MenuItems associated Page.
@@ -81,12 +67,15 @@ If you enter a link in this field and then pick a Page as well the link will
 be overwritten by the Page you chose.
 
 
-#### Sort ####
-Used to sort MenuItems when DataObjectManager is not in use.
-
-
-#### IsNewWindow ####
+#### IsNewWindow
 Can be used as a check to see if 'target="_blank"' should be added to links.
+
+
+### Usage in template
+
+	<% loop $MenuSet('YourMenuName').MenuItems %>
+		<a href="$Link" class="$LinkingMode">$MenuTitle</a>
+	<% end_loop %>
 
 
 ###Code guidelines
