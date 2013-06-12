@@ -2,7 +2,7 @@
 
 The menu management module is for creating custom menu structures when the site tree hierarchy just won't do.
 
-The current version supports SilverStripe only, see the 1.0 branch for a SilverStripe 2.4 compatible version.
+The latest version only supports SilverStripe 3, see the 1.0 branch for a SilverStripe 2.4 compatible version.
 
 ##License
 
