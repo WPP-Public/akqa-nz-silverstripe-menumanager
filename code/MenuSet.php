@@ -55,7 +55,7 @@ class MenuSet extends DataObject
                 )
             );
 
-            $config->addComponent(new GridFieldSortableRows('Sort'));
+            $config->addComponent(new GridFieldOrderableRows());
 
         } else {
             $fields->push(new TextField('Name', 'Name (this field can\'t be changed once set)'));
