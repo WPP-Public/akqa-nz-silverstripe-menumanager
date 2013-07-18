@@ -12,7 +12,9 @@ Menu Manager is licensed under an [MIT license](http://heyday.mit-license.org/)
 
 ###Non-composer
 
-To install just drop the silverstripe-menumanager directory into your SilverStripe root and run a /dev/build/?flush=1
+To install drop the silverstripe-menumanager directory into your SilverStripe root. You must also install [silverstripe-gridfieldextensions](https://github.com/ajshort/silverstripe-gridfieldextensions) as it is a dependency for this module.
+
+Once both of these are installed, you can run `dev/build?flush=1`
 
 ###Composer
 
