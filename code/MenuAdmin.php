@@ -8,19 +8,19 @@ class MenuAdmin extends ModelAdmin
     /**
      * @var array
      */
-    public static $managed_models = array(
+    private static $managed_models = array(
         'MenuSet'
     );
     /**
      * @var string
      */
-    public static $url_segment = 'menu';
+    private static $url_segment = 'menu';
     /**
      * @var string
      */
-    public static $menu_title = 'Menu Management';
+    private static $menu_title = 'Menu Management';
     /**
      * @var array
      */
-    public static $model_importers = array();
+    private static $model_importers = array();
 }

@@ -8,7 +8,7 @@ class MenuItem extends DataObject
     /**
      * @var array
      */
-    public static $db = array(
+    private static $db = array(
         // If you want to customise the MenuTitle use this field - leaving blank will use MenuTitle of associated Page
         'MenuTitle'   => 'Varchar(255)',
         // This field is used for external links (picking a page from the dropdown will overwrite this link)
@@ -21,21 +21,21 @@ class MenuItem extends DataObject
     /**
      * @var array
      */
-    public static $has_one = array(
+    private static $has_one = array(
         'Page'    => 'SiteTree', // page the MenuItem refers to
         'MenuSet' => 'MenuSet' // parent MenuSet
     );
     /**
      * @var array
      */
-    public static $searchable_fields = array(
+    private static $searchable_fields = array(
         'MenuTitle',
         'Page.Title'
     );
     /**
      * @var array
      */
-    public static $summary_fields = array(
+    private static $summary_fields = array(
         'Menu Title' => 'MenuTitle',
         'Page Title' => 'Page.Title',
         'Link',
@@ -44,7 +44,7 @@ class MenuItem extends DataObject
     /**
      * @var string
      */
-    public static $default_sort = 'Sort';
+    private static $default_sort = 'Sort';
     /**
      * @return FieldList
      */

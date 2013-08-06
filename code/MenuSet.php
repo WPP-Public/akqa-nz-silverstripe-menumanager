@@ -8,25 +8,25 @@ class MenuSet extends DataObject
     /**
      * @var array
      */
-    public static $db = array(
+    private static $db = array(
         'Name' => 'Varchar(255)'
     );
     /**
      * @var array
      */
-    public static $has_many = array(
+    private static $has_many = array(
         'MenuItems' => 'MenuItem'
     );
     /**
      * @var array
      */
-    public static $searchable_fields = array(
+    private static $searchable_fields = array(
         'Name'
     );
     /**
      * @var array
      */
-    public static $summary_fields = array(
+    private static $summary_fields = array(
         'Name'
     );
     /**
