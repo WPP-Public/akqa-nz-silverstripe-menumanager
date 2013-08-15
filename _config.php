@@ -1,3 +1,5 @@
 <?php
 
-Object::add_extension('ContentController', 'MenuControllerExtension');
+if (class_exists('ContentController')) {
+    Object::add_extension('ContentController', 'MenuControllerExtension');
+}
