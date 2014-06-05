@@ -16,5 +16,8 @@
 	},
 	"extra": {
 		"dev-master": "2.0.x-dev"
+	},
+	"extra": {
+		"installer-name": "menumanager"
 	}
 }
