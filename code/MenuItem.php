@@ -57,10 +57,12 @@ class MenuItem extends DataObject
         );
 
         $fields->push(
-            new DropdownField(
+            new TreeDropdownField(
                 'PageID',
                 'Page',
-                array('' => '--- Select One ---') + Page::get()->sort('Title ASC')->map('ID', 'MenuTitle')->toArray()
+                'Page',
+                'ID',
+                'MenuTitle'
             )
         );
 
