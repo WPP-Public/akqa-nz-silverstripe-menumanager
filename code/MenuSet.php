@@ -3,7 +3,7 @@
 /**
  * Class MenuSet
  */
-class MenuSet extends DataObject
+class MenuSet extends DataObject implements PermissionProvider
 {
     /**
      * @var array
@@ -29,6 +29,47 @@ class MenuSet extends DataObject
     private static $summary_fields = array(
         'Name'
     );
+    /**
+     * @return array
+     */
+    public function providePermissions()
+    {
+        return array(
+            'MANAGE_MENU_SETS' => 'Manage Menu Sets',
+        );
+    }
+    /**
+     * @param null $member
+     * @return boolean
+     */
+    public function canCreate($member = null)
+    {
+        return Permission::check('MANAGE_MENU_SETS');
+    }
+    /**
+     * @param null $member
+     * @return boolean
+     */
+    public function canDelete($member = null)
+    {
+        return Permission::check('MANAGE_MENU_SETS');
+    }
+    /**
+     * @param null $member
+     * @return boolean
+     */
+    public function canEdit($member = null)
+    {
+        return Permission::check('MANAGE_MENU_SETS');
+    }
+    /**
+     * @param null $member
+     * @return boolean
+     */
+    public function canView($member = null)
+    {
+        return Permission::check('MANAGE_MENU_SETS');
+    }
     /**
      * @return mixed
      */

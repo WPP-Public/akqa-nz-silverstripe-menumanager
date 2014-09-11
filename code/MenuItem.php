@@ -3,7 +3,7 @@
 /**
  * Class MenuItem
  */
-class MenuItem extends DataObject
+class MenuItem extends DataObject implements PermissionProvider
 {
     /**
      * @var array
@@ -45,6 +45,47 @@ class MenuItem extends DataObject
      * @var string
      */
     private static $default_sort = 'Sort';
+    /**
+     * @return array
+     */
+    public function providePermissions()
+    {
+        return array(
+            'MANAGE_MENU_ITEMS' => 'Manage Menu Items',
+        );
+    }
+    /**
+     * @param null $member
+     * @return boolean
+     */
+    public function canCreate($member = null)
+    {
+        return Permission::check('MANAGE_MENU_ITEMS');
+    }
+    /**
+     * @param null $member
+     * @return boolean
+     */
+    public function canDelete($member = null)
+    {
+        return Permission::check('MANAGE_MENU_ITEMS');
+    }
+    /**
+     * @param null $member
+     * @return boolean
+     */
+    public function canEdit($member = null)
+    {
+        return Permission::check('MANAGE_MENU_ITEMS');
+    }
+    /**
+     * @param null $member
+     * @return boolean
+     */
+    public function canView($member = null)
+    {
+        return Permission::check('MANAGE_MENU_ITEMS');
+    }
     /**
      * @return FieldList
      */
