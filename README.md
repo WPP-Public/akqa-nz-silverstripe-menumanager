@@ -40,8 +40,16 @@ There are 2 main steps to creating a menu using menu management.
 
 ### Creating a MenuSet
 
-This is pretty straight forward. You just give the MenuSet a Name (which is what
-you reference in the templates when controlling the menu)
+This is pretty straight forward. You just give the MenuSet a Name (which is what you reference in the templates when controlling the menu).
+
+As it is common to reference MenuSets by name in templates, you can configure sets to be created automatically during the /dev/build task. These sets cannot be deleted through the CMS.
+
+```yaml
+MenuSet:
+  default_sets:
+    - Main
+    - Footer
+```
 
 
 ### Creating MenuItems

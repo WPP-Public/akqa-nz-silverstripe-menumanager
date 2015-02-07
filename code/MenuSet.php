@@ -52,7 +52,7 @@ class MenuSet extends DataObject implements PermissionProvider
      */
     public function canDelete($member = null)
     {
-        return Permission::check('MANAGE_MENU_SETS');
+        return !$this->isDefaultSet() && Permission::check('MANAGE_MENU_SETS');
     }
     /**
      * @param null $member
@@ -77,6 +77,36 @@ class MenuSet extends DataObject implements PermissionProvider
     {
         return $this->MenuItems();
     }
+
+    /**
+     * Check if this menu set appears in the default sets config
+     * @return bool
+     */
+    public function isDefaultSet()
+    {
+        return in_array($this->Name, $this->getDefaultSetNames());
+    }
+
+    /**
+     * Set up default records based on the yaml config
+     */
+    public function requireDefaultRecords()
+    {
+        parent::requireDefaultRecords();
+
+        foreach ($this->getDefaultSetNames() as $name) {
+            $existingRecord = MenuSet::get()->filter('Name', $name)->first();
+
+            if (!$existingRecord) {
+                $set = new MenuSet();
+                $set->Name = $name;
+                $set->write();
+
+                DB::alteration_message("MenuSet '$name' created", 'created');
+            }
+        }
+    }
+
     /**
      * @return FieldList
      */
@@ -106,9 +136,7 @@ class MenuSet extends DataObject implements PermissionProvider
 
         return $fields;
     }
-    /**
-     *
-     */
+
     public function onBeforeDelete()
     {
         $menuItems = $this->MenuItems();
@@ -122,4 +150,13 @@ class MenuSet extends DataObject implements PermissionProvider
         parent::onBeforeDelete();
     }
 
+    /**
+     * Get the MenuSet names configured under MenuSet.default_sets
+     * 
+     * @return string[]
+     */
+    protected function getDefaultSetNames()
+    {
+        return $this->config()->get('default_sets') ?: array();
+    }
 }
