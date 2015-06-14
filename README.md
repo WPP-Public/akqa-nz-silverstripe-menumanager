@@ -25,7 +25,7 @@ Create or edit a `composer.json` file in the root of your SilverStripe project, 
 ```json
 {
     "require": {
-        "heyday/silverstripe-menumanager": "2.0.*"
+        "heyday/silverstripe-menumanager": "~2.1.0"
     }
 }
 ```
