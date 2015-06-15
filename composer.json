@@ -12,9 +12,9 @@
 	],
 	"require": {
 		"composer/installers": "~1.0",
-		"silverstripe-australia/gridfieldextensions": "~1.0.0"
+		"silverstripe-australia/gridfieldextensions": "~1.1.0"
 	},
 	"extra": {
-		"dev-master": "2.0.x-dev"
+		"dev-master": "2.1.x-dev"
 	}
 }
