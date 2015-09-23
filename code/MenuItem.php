@@ -133,7 +133,7 @@ class MenuItem extends DataObject implements PermissionProvider
     {
         $default = parent::__get($field);
 
-        if ($default) {
+        if ($default || $field === 'ID') {
             return $default;
         } else {
             $page = $this->Page();
