@@ -39,7 +39,7 @@ class MenuSet extends DataObject implements PermissionProvider
         );
     }
     /**
-     * @param null $member
+     * @param mixed $member
      * @return boolean
      */
     public function canCreate($member = null)
@@ -47,7 +47,7 @@ class MenuSet extends DataObject implements PermissionProvider
         return Permission::check('MANAGE_MENU_SETS');
     }
     /**
-     * @param null $member
+     * @param mixed $member
      * @return boolean
      */
     public function canDelete($member = null)
@@ -55,7 +55,7 @@ class MenuSet extends DataObject implements PermissionProvider
         return !$this->isDefaultSet() && Permission::check('MANAGE_MENU_SETS');
     }
     /**
-     * @param null $member
+     * @param mixed $member
      * @return boolean
      */
     public function canEdit($member = null)
@@ -63,7 +63,7 @@ class MenuSet extends DataObject implements PermissionProvider
         return Permission::check('MANAGE_MENU_SETS');
     }
     /**
-     * @param null $member
+     * @param mixed $member
      * @return boolean
      */
     public function canView($member = null)
@@ -152,7 +152,7 @@ class MenuSet extends DataObject implements PermissionProvider
 
     /**
      * Get the MenuSet names configured under MenuSet.default_sets
-     * 
+     *
      * @return string[]
      */
     protected function getDefaultSetNames()
