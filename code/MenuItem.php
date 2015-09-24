@@ -18,6 +18,7 @@ class MenuItem extends DataObject implements PermissionProvider
         // Can be used as a check for adding target="_blank"
         'IsNewWindow' => 'Boolean'
     );
+
     /**
      * @var array
      */
@@ -25,6 +26,7 @@ class MenuItem extends DataObject implements PermissionProvider
         'Page'    => 'SiteTree', // page the MenuItem refers to
         'MenuSet' => 'MenuSet' // parent MenuSet
     );
+
     /**
      * @var array
      */
@@ -32,6 +34,7 @@ class MenuItem extends DataObject implements PermissionProvider
         'MenuTitle',
         'Page.Title'
     );
+
     /**
      * @var array
      */
@@ -41,10 +44,12 @@ class MenuItem extends DataObject implements PermissionProvider
         'Link',
         'IsNewWindow'
     );
+
     /**
      * @var string
      */
     private static $default_sort = 'Sort';
+
     /**
      * @return array
      */
@@ -54,6 +59,7 @@ class MenuItem extends DataObject implements PermissionProvider
             'MANAGE_MENU_ITEMS' => 'Manage Menu Items',
         );
     }
+
     /**
      * @param null $member
      * @return boolean
@@ -62,6 +68,7 @@ class MenuItem extends DataObject implements PermissionProvider
     {
         return Permission::check('MANAGE_MENU_ITEMS');
     }
+
     /**
      * @param null $member
      * @return boolean
@@ -70,6 +77,7 @@ class MenuItem extends DataObject implements PermissionProvider
     {
         return Permission::check('MANAGE_MENU_ITEMS');
     }
+
     /**
      * @param null $member
      * @return boolean
@@ -78,6 +86,7 @@ class MenuItem extends DataObject implements PermissionProvider
     {
         return Permission::check('MANAGE_MENU_ITEMS');
     }
+
     /**
      * @param null $member
      * @return boolean
@@ -86,6 +95,7 @@ class MenuItem extends DataObject implements PermissionProvider
     {
         return Permission::check('MANAGE_MENU_ITEMS');
     }
+
     /**
      * @return FieldList
      */
@@ -112,6 +122,7 @@ class MenuItem extends DataObject implements PermissionProvider
 
         return $fields;
     }
+
     /**
      * @return mixed
      */
@@ -147,6 +158,7 @@ class MenuItem extends DataObject implements PermissionProvider
             }
         }
     }
+
     /**
      * Checks to see if a page has been chosen and if so sets Link to null
      * This means that used in conjunction with the __get method above
