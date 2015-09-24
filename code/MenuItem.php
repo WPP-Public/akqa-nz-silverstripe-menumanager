@@ -55,7 +55,7 @@ class MenuItem extends DataObject implements PermissionProvider
         );
     }
     /**
-     * @param null $member
+     * @param mixed $member
      * @return boolean
      */
     public function canCreate($member = null)
@@ -63,7 +63,7 @@ class MenuItem extends DataObject implements PermissionProvider
         return Permission::check('MANAGE_MENU_ITEMS');
     }
     /**
-     * @param null $member
+     * @param mixed $member
      * @return boolean
      */
     public function canDelete($member = null)
@@ -71,7 +71,7 @@ class MenuItem extends DataObject implements PermissionProvider
         return Permission::check('MANAGE_MENU_ITEMS');
     }
     /**
-     * @param null $member
+     * @param mixed $member
      * @return boolean
      */
     public function canEdit($member = null)
@@ -79,7 +79,7 @@ class MenuItem extends DataObject implements PermissionProvider
         return Permission::check('MANAGE_MENU_ITEMS');
     }
     /**
-     * @param null $member
+     * @param mixed $member
      * @return boolean
      */
     public function canView($member = null)
