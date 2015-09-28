@@ -137,7 +137,7 @@ class MenuItem extends DataObject implements PermissionProvider
      * to return a similar field on the associated Page
      * (if there is one)
      *
-     * @param  string $field
+     * @param string $field
      * @return mixed
      */
     public function __get($field)
