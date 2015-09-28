@@ -11,24 +11,28 @@ class MenuSet extends DataObject implements PermissionProvider
     private static $db = array(
         'Name' => 'Varchar(255)'
     );
+
     /**
      * @var array
      */
     private static $has_many = array(
         'MenuItems' => 'MenuItem'
     );
+
     /**
      * @var array
      */
     private static $searchable_fields = array(
         'Name'
     );
+
     /**
      * @var array
      */
     private static $summary_fields = array(
         'Name'
     );
+
     /**
      * @return array
      */
@@ -38,6 +42,7 @@ class MenuSet extends DataObject implements PermissionProvider
             'MANAGE_MENU_SETS' => 'Manage Menu Sets',
         );
     }
+
     /**
      * @param mixed $member
      * @return boolean
@@ -46,6 +51,7 @@ class MenuSet extends DataObject implements PermissionProvider
     {
         return Permission::check('MANAGE_MENU_SETS');
     }
+
     /**
      * @param mixed $member
      * @return boolean
@@ -54,6 +60,7 @@ class MenuSet extends DataObject implements PermissionProvider
     {
         return !$this->isDefaultSet() && Permission::check('MANAGE_MENU_SETS');
     }
+
     /**
      * @param mixed $member
      * @return boolean
@@ -62,6 +69,7 @@ class MenuSet extends DataObject implements PermissionProvider
     {
         return Permission::check('MANAGE_MENU_SETS');
     }
+
     /**
      * @param mixed $member
      * @return boolean
@@ -70,6 +78,7 @@ class MenuSet extends DataObject implements PermissionProvider
     {
         return Permission::check('MANAGE_MENU_SETS');
     }
+
     /**
      * @return mixed
      */
