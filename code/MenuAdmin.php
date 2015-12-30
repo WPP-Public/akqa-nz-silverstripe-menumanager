@@ -23,6 +23,11 @@ class MenuAdmin extends ModelAdmin
     private static $menu_title = 'Menu Management';
 
     /**
+     * @var string
+     */
+	private static $menu_icon = "silverstripe-menumanager/images/menu.png";
+
+	/**
      * @var array
      */
     private static $model_importers = array();
