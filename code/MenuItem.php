@@ -16,7 +16,9 @@ class MenuItem extends DataObject implements PermissionProvider
         // Sort order
         'Sort'        => 'Int',
         // Can be used as a check for adding target="_blank"
-        'IsNewWindow' => 'Boolean'
+        'IsNewWindow' => 'Boolean',
+        // ID of submenu
+        'SubMenuID' => 'Int'
     );
 
     /**
@@ -118,6 +120,14 @@ class MenuItem extends DataObject implements PermissionProvider
         $fields->push(new TextField('Link', 'Link (use when not specifying a page)'));
         $fields->push(new CheckboxField('IsNewWindow', 'Open in a new window?'));
 
+        $fields->push(
+            DropdownField::create(
+                'SubMenuID',
+                'Sub Menu',
+                MenuSet::get()->filter('ID:not', $this->owner->MenuSet()->ID)->map('ID', 'Name')->toArray()
+            )->setEmptyString('-- No sub menu --')->setRightTitle('Sub Menu should be set up before attaching it to this menu item.')
+        );
+
         $this->extend('updateCMSFields', $fields);
 
         return $fields;
@@ -172,5 +182,13 @@ class MenuItem extends DataObject implements PermissionProvider
         if ($this->PageID != 0) {
             $this->Link = null;
         }
+    }
+
+    public function getSubMenu()
+    {
+        if ($this->owner->SubMenuID) {
+            return MenuSet::get()->byID($this->owner->SubMenuID);
+        }
+        return false;
     }
 }
