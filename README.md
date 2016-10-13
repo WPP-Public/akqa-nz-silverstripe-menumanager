@@ -51,6 +51,14 @@ MenuSet:
     - Footer
 ```
 
+### Allow sorting of MenuSets
+
+By default menu sets cannot be sorted, however, you can set your configuration to allow it.
+
+```yaml
+MenuSet:
+  allow_sorting: true
+```
 
 ### Creating MenuItems
 
@@ -83,10 +91,29 @@ Can be used as a check to see if 'target="_blank"' should be added to links.
 
 ### Usage in template
 
+To loop through a specific MenuSet's items:
+
 	<% loop $MenuSet('YourMenuName').MenuItems %>
 		<a href="$Link" class="$LinkingMode">$MenuTitle</a>
 	<% end_loop %>
 
+To loop through *all* MenuSets and their items:
+
+	<% loop $MenuSets %>
+		<% loop $MenuItems %>
+			<a href="$Link" class="$LinkingMode">$MenuTitle</a>
+		<% end_loop %>
+	<% end_loop %>
+
+Optionally you can also limit the number of MenuSets and MenuItems that are looped through.
+
+The example below will fetch the top 4 MenuSets (as seen in Menu Management), and the top 5 MenuItems for each:
+
+	<% loop $MenuSets.Limit(4) %>
+		<% loop $MenuItems.Limit(5) %>
+			<a href="$Link" class="$LinkingMode">$MenuTitle</a>
+		<% end_loop %>
+	<% end_loop %>
 
 ###Code guidelines
 

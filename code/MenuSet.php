@@ -9,7 +9,8 @@ class MenuSet extends DataObject implements PermissionProvider
      * @var array
      */
     private static $db = array(
-        'Name' => 'Varchar(255)'
+        'Name' => 'Varchar(255)',
+        'Sort' => 'Int'
     );
 
     /**
@@ -42,6 +43,11 @@ class MenuSet extends DataObject implements PermissionProvider
             'MANAGE_MENU_SETS' => 'Manage Menu Sets',
         );
     }
+
+    /**
+     * @var string
+     */
+    private static $default_sort = 'Sort';
 
     /**
      * @param mixed $member
