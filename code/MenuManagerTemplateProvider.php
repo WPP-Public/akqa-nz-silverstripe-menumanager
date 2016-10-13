@@ -8,7 +8,8 @@ class MenuManagerTemplateProvider implements TemplateGlobalProvider
     public static function get_template_global_variables()
     {
         return array(
-            'MenuSet' => 'MenuSet'
+            'MenuSet' => 'MenuSet',
+            'MenuSets' => 'MenuSets'
         );
     }
 
@@ -24,5 +25,15 @@ class MenuManagerTemplateProvider implements TemplateGlobalProvider
                     'Name' => $name
                 )
             )->first();
+    }
+
+    /**
+     * @return DataList
+     */
+    public static function MenuSets()
+    {
+        $menuSets = MenuSet::get();
+
+        return $menuSets;
     }
 }
