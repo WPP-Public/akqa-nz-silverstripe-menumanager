@@ -32,8 +32,6 @@ class MenuManagerTemplateProvider implements TemplateGlobalProvider
      */
     public static function MenuSets()
     {
-        $menuSets = MenuSet::get();
-
-        return $menuSets;
+        return MenuSet::get();
     }
 }
