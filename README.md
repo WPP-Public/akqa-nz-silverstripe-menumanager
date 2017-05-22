@@ -1,22 +1,22 @@
-#Heyday Menu Manager
+# Heyday Menu Manager
 
 The menu management module is for creating custom menu structures when the site tree hierarchy just won't do.
 
 The latest version only supports SilverStripe 3, see the 1.0 branch for a SilverStripe 2.4 compatible version.
 
-##License
+## License
 
 Menu Manager is licensed under an [MIT license](http://heyday.mit-license.org/)
 
-##Installation
+## Installation
 
-###Non-composer
+### Non-composer
 
 To install drop the silverstripe-menumanager directory into your SilverStripe root. You must also install [silverstripe-gridfieldextensions](https://github.com/ajshort/silverstripe-gridfieldextensions) as it is a dependency for this module.
 
 Once both of these are installed, you can run `dev/build?flush=1`
 
-###Composer
+### Composer
 
 Installing from composer is easy, 
 
@@ -32,7 +32,7 @@ Create or edit a `composer.json` file in the root of your SilverStripe project, 
 
 After completing this step, navigate in Terminal or similar to the SilverStripe root directory and run `composer install` or `composer update` depending on whether or not you have composer already in use.
 
-##Usage
+## Usage
 There are 2 main steps to creating a menu using menu management.
 
 1. Create a new MenuSet
@@ -50,7 +50,6 @@ MenuSet:
     - Main
     - Footer
 ```
-
 
 ### Creating MenuItems
 
@@ -83,17 +82,15 @@ Can be used as a check to see if 'target="_blank"' should be added to links.
 
 ### Usage in template
 
-	<% loop $MenuSet('YourMenuName').MenuItems %>
-		<a href="$Link" class="$LinkingMode">$MenuTitle</a>
-	<% end_loop %>
+```
+<% loop $MenuSet('YourMenuName').MenuItems %>
+	<a href="$Link" class="$LinkingMode">$MenuTitle</a>
+<% end_loop %>
+```
 
-
-###Code guidelines
+### Code guidelines
 
 This project follows the standards defined in:
 
 * [PSR-1](https://github.com/pmjones/fig-standards/blob/psr-1-style-guide/proposed/PSR-1-basic.md)
 * [PSR-2](https://github.com/pmjones/fig-standards/blob/psr-1-style-guide/proposed/PSR-2-advanced.md)
-
-
-
