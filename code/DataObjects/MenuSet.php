@@ -15,6 +15,13 @@ class MenuSet extends DataObject implements PermissionProvider
     /**
      * @var array
      */
+    private static $has_one = array(
+        'MobileMenuSiteConfig' => 'SiteConfig'
+    );
+
+    /**
+     * @var array
+     */
     private static $has_many = array(
         'MenuItems' => 'MenuItem'
     );

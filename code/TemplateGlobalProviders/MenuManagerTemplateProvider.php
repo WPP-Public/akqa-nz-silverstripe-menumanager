@@ -8,7 +8,8 @@ class MenuManagerTemplateProvider implements TemplateGlobalProvider
     public static function get_template_global_variables()
     {
         return array(
-            'MenuSet' => 'MenuSet'
+            'MenuSet' => 'MenuSet',
+            'JsonMobileMenu' => 'JsonMobileMenu'
         );
     }
 
@@ -24,5 +25,23 @@ class MenuManagerTemplateProvider implements TemplateGlobalProvider
                     'Name' => $name
                 )
             )->first();
+    }
+
+    public function getJsonMobileMenu()
+    {
+        $config = SiteConfig::current_site_config();
+        $isMenuManager = $config->MenuManagerOption;
+
+        if ($isMenuManager) {
+
+
+        } else {
+            $rootPages = SiteTree::get()
+                ->filter([
+                    'ParentID' => 0,
+                    'ShowInMenus' => 1
+                ]);
+        }
+
     }
 }
