@@ -1,0 +1,3 @@
+SiteConfig:
+  extensions:
+    - MobileMenuSiteConfig
