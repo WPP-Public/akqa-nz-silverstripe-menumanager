@@ -1,0 +1,13 @@
+DataObject:
+  extensions:
+    - Heyday\CacheInclude\SilverStripe\InvalidationExtension
+
+Injector:
+  CacheIncludeConfig:
+    class: Heyday\CacheInclude\Configs\ArrayConfig
+    properties:
+      Config:
+        JSONMobileMenu:
+          context: full
+          contains:
+            - Page
