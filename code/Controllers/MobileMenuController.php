@@ -35,28 +35,31 @@ class MobileMenuController extends Controller
 
     /**
      * return the JSON for the 2 different cases (Menu Manager or Children)
+     *
+     * @return string
      */
-    public function JSONMenu()
+    public function JSONMenu($mobile = false)
     {
         $menuMobileArray = array();
 
-        $request = $this->getRequest();
+        $level = $this->getLevel();
 
-        if ($this->getRequest()->getVar('level')) {
-            $level = $request->getVar('level');
-        } else {
-            $level = 0;
-        }
-
-        if ($this->getRequest()->getVar('mobile')) {
-            $mobile = $request->getVar('mobile');
-        } else {
-            $mobile = false;
+        /**
+         * There is 2 way to say it's mobile, one for the template and one from an endpoint
+         * See on MenuManagerTemplateProvider.php getJsonMenu and getJsonMobileMenu
+         */
+        if (!$mobile) {
+            $mobile = $this->isMobile();
         }
 
         // if using the menu manager for the menu, get items from there if not, using the children
         if ($this->isUsingMenuManager()) {
 
+            /**
+             * You can set mobile at 0 or 1. If it's not mobile, it will return all the MenuSets.
+             * If mobile, it'll return the MenuSet selected in the Mobile menu tab.
+             * `example.com/menuset?level=2&mobile=0`
+             */
             if ($mobile) {
                 $menuSets = $this->getMenuSets();
             } else {
@@ -65,8 +68,6 @@ class MobileMenuController extends Controller
 
             /** @var MenuSet $menuSet */
             foreach ($menuSets as $menuSet) {
-
-
                 $menuItems = $menuSet->Children();
 
                 /** @var MenuItem $menuItem */
@@ -80,10 +81,8 @@ class MobileMenuController extends Controller
                         'url' => $menuItem->Link ?: '',
                         'children' => $children
                     ];
-
                 }
             }
-
         } else {
             // Using the normal Children from the CMS, not using the Mega Menu
             $rootPages = SiteTree::get()
@@ -93,7 +92,6 @@ class MobileMenuController extends Controller
                 ]);
 
             foreach ($rootPages as $rootPage) {
-
                 $children = $this->recursiveChildren($rootPage, $level);
 
                 $menuMobileArray['NormalMenu'][] = [
@@ -107,18 +105,51 @@ class MobileMenuController extends Controller
     }
 
     /**
-     *  Recursive function to find all the children until the end
+     * Check if the var mobile in request is set to 0 or 1.
      *
-     * @param $kids
+     * @return bool
+     */
+    public function isMobile()
+    {
+        if ($this->getRequest()->getVar('mobile')) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @return int|mixed
+     */
+    public function getLevel()
+    {
+        if ($this->getRequest()->getVar('level')) {
+            $level = $this->getRequest()->getVar('level');
+        } else {
+            $level = 0;
+        }
+        return $level;
+    }
+
+    /**
+     *  Recursive function to find all the children until the end.
+     *  Only returning the first level by default
+     *  If you want more, you'll need to add a param in the url like the one below.
+     *
+     *  `example.com/menuset?level=2&mobile=0`
+     *
+     * @param ArrayList $kids ArrayList of Pages
+     * @param int $level
      * @return array
      */
-    protected function recursiveChildren($kids, $level = 0)
+    protected function recursiveChildren($kids, $level = 1)
     {
         $children = [];
+
         $level--;
 
         if ($greatKids = $kids->Children()) {
-            if ($level > 0){
+            if ($level > 0) {
                 foreach ($greatKids as $greatKid) {
                     $children[] = [
                         'title' => $greatKid->MenuTitle ?: '',
@@ -150,10 +181,5 @@ class MobileMenuController extends Controller
     {
         $config = SiteConfig::current_site_config();
         return $config->MenuSets();
-    }
-
-    public function getPageChildren($menuItem)
-    {
-
     }
 }
