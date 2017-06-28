@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * Class MenuManagerTemplateProvider
+ */
 class MenuManagerTemplateProvider implements TemplateGlobalProvider
 {
     /**
@@ -9,6 +12,7 @@ class MenuManagerTemplateProvider implements TemplateGlobalProvider
     {
         return array(
             'MenuSet' => 'MenuSet',
+            'JsonMenu' => 'JsonMenu',
             'JsonMobileMenu' => 'JsonMobileMenu'
         );
     }
@@ -27,21 +31,22 @@ class MenuManagerTemplateProvider implements TemplateGlobalProvider
             )->first();
     }
 
-    public function getJsonMobileMenu()
+    /**
+     * @return string
+     */
+    public static function JsonMenu()
     {
-        $config = SiteConfig::current_site_config();
-        $isMenuManager = $config->MenuManagerOption;
+        /** @var MobileMenuController $MenuController */
+        $MenuController = new MobileMenuController();
+        return $MenuController->JSONMenu();
+    }
 
-        if ($isMenuManager) {
-
-
-        } else {
-            $rootPages = SiteTree::get()
-                ->filter([
-                    'ParentID' => 0,
-                    'ShowInMenus' => 1
-                ]);
-        }
-
+    /**
+     * @return string
+     */
+    public static function JsonMobileMenu()
+    {
+        $MenuController = new MobileMenuController();
+        return $MenuController->JSONMenu(true);
     }
 }
