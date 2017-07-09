@@ -39,11 +39,16 @@ class MenuItem extends DataObject implements PermissionProvider
      * @var array
      */
     private static $summary_fields = array(
-        'Menu Title' => 'MenuTitle',
-        'Page Title' => 'Page.Title',
-        'Link',
-        'IsNewWindow'
+        'MenuTitle' => 'Title',
+        'Page.Title' => 'Page Title',
+        'Link' => 'Link',
+        'IsNewWindowNice' => 'Opens in new window?'
     );
+
+    public function IsNewWindowNice()
+    {
+        return $this->IsNewWindow ? 'Yes' : 'No';
+    }
 
     /**
      * @var string
@@ -157,6 +162,14 @@ class MenuItem extends DataObject implements PermissionProvider
                 }
             }
         }
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getTitle()
+    {
+        return $this->MenuTitle;
     }
 
     /**
