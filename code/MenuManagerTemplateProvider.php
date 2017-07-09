@@ -8,12 +8,12 @@ use SilverStripe\View\TemplateGlobalProvider;
 class MenuManagerTemplateProvider implements TemplateGlobalProvider
 {
     /**
-     * @return array|void
+     * @return array
      */
     public static function get_template_global_variables()
     {
         return [
-            'MenuSet' => 'MenuSet'
+            'MenuSet' => 'Heyday\MenuManager\MenuSet'
         ];
     }
 

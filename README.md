@@ -45,7 +45,7 @@ This is pretty straight forward. You just give the MenuSet a Name (which is what
 As it is common to reference MenuSets by name in templates, you can configure sets to be created automatically during the /dev/build task. These sets cannot be deleted through the CMS.
 
 ```yaml
-MenuSet:
+Heyday\MenuManager\MenuSet:
   default_sets:
     - Main
     - Footer

@@ -12,14 +12,16 @@
 	],
 	"require": {
 		"silverstripe/framework": "~4.0",
-		"silverstripe-australia/gridfieldextensions": "^3.0"
+		"symbiote/gridfieldextensions": "^3.0"
 	},
 	"autoload": {
-		"psr-4": {
+		"psr-4": {git sttat
 			"Heyday\\MenuManager\\": "code/"
 		}
 	},
 	"extra": {
 		"dev-master": "3.0.x-dev"
-	}
+	},
+	"minimum-stability": "dev",
+	"prefer-stable": true
 }

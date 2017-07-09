@@ -29,7 +29,7 @@ class MenuSet extends DataObject implements PermissionProvider
      * @var array
      */
     private static $has_many = [
-        'MenuItems' => 'MenuItem'
+        'MenuItems' => 'Heyday\MenuManager\MenuItem'
     ];
 
     /**
@@ -151,7 +151,7 @@ class MenuSet extends DataObject implements PermissionProvider
                 )
             );
 
-            $config->addComponent(new GridFieldOrderableRows());
+            $config->addComponent(new GridFieldOrderableRows('Sort'));
 
         } else {
             $fields->push(new TextField('Name', 'Name (this field can\'t be changed once set)'));
@@ -182,6 +182,6 @@ class MenuSet extends DataObject implements PermissionProvider
      */
     protected function getDefaultSetNames()
     {
-        return $this->config()->get('default_sets') ?: array();
+        return $this->config()->get('default_sets') ?: [];
     }
 }

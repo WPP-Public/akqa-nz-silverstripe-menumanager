@@ -33,8 +33,8 @@ class MenuItem extends DataObject implements PermissionProvider
      * @var array
      */
     private static $has_one = [
-        'Page' => 'SiteTree', // page the MenuItem refers to
-        'MenuSet' => 'MenuSet' // parent MenuSet
+        'Page' => 'SilverStripe\CMS\Model\SiteTree', // page the MenuItem refers to
+        'MenuSet' => 'Heyday\MenuManager\MenuSet' // parent MenuSet
     ];
 
     /**
