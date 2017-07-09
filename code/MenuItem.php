@@ -1,5 +1,15 @@
 <?php
 
+namespace Heyday\MenuManager;
+
+use SilverStripe\Forms\CheckboxField;
+use SilverStripe\Forms\FieldList;
+use SilverStripe\Forms\TextField;
+use SilverStripe\Forms\TreeDropdownField;
+use SilverStripe\ORM\DataObject;
+use SilverStripe\Security\Permission;
+use SilverStripe\Security\PermissionProvider;
+
 /**
  * Class MenuItem
  */
@@ -8,42 +18,42 @@ class MenuItem extends DataObject implements PermissionProvider
     /**
      * @var array
      */
-    private static $db = array(
+    private static $db = [
         // If you want to customise the MenuTitle use this field - leaving blank will use MenuTitle of associated Page
-        'MenuTitle'   => 'Varchar(255)',
+        'MenuTitle' => 'Varchar(255)',
         // This field is used for external links (picking a page from the dropdown will overwrite this link)
-        'Link'        => 'Text',
+        'Link' => 'Text',
         // Sort order
-        'Sort'        => 'Int',
+        'Sort' => 'Int',
         // Can be used as a check for adding target="_blank"
         'IsNewWindow' => 'Boolean'
-    );
+    ];
 
     /**
      * @var array
      */
-    private static $has_one = array(
-        'Page'    => 'SiteTree', // page the MenuItem refers to
+    private static $has_one = [
+        'Page' => 'SiteTree', // page the MenuItem refers to
         'MenuSet' => 'MenuSet' // parent MenuSet
-    );
+    ];
 
     /**
      * @var array
      */
-    private static $searchable_fields = array(
+    private static $searchable_fields = [
         'MenuTitle',
         'Page.Title'
-    );
+    ];
 
     /**
      * @var array
      */
-    private static $summary_fields = array(
+    private static $summary_fields = [
         'Menu Title' => 'MenuTitle',
         'Page Title' => 'Page.Title',
         'Link',
         'IsNewWindow'
-    );
+    ];
 
     /**
      * @var string
@@ -55,16 +65,17 @@ class MenuItem extends DataObject implements PermissionProvider
      */
     public function providePermissions()
     {
-        return array(
-            'MANAGE_MENU_ITEMS' => 'Manage Menu Items',
-        );
+        return [
+            'MANAGE_MENU_ITEMS' => 'Manage Menu Items'
+        ];
     }
 
     /**
      * @param mixed $member
+     * @param array $context
      * @return boolean
      */
-    public function canCreate($member = null)
+    public function canCreate($member = null, $context = [])
     {
         return Permission::check('MANAGE_MENU_ITEMS');
     }

@@ -1,5 +1,18 @@
 <?php
 
+namespace Heyday\MenuManager;
+
+use SilverStripe\Forms\FieldList;
+use SilverStripe\Forms\GridField\GridField;
+use SilverStripe\Forms\GridField\GridFieldConfig_RelationEditor;
+use SilverStripe\Forms\TextField;
+use SilverStripe\ORM\DataList;
+use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\DB;
+use SilverStripe\Security\Permission;
+use SilverStripe\Security\PermissionProvider;
+use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
+
 /**
  * Class MenuSet
  */
@@ -8,46 +21,47 @@ class MenuSet extends DataObject implements PermissionProvider
     /**
      * @var array
      */
-    private static $db = array(
+    private static $db = [
         'Name' => 'Varchar(255)'
-    );
+    ];
 
     /**
      * @var array
      */
-    private static $has_many = array(
+    private static $has_many = [
         'MenuItems' => 'MenuItem'
-    );
+    ];
 
     /**
      * @var array
      */
-    private static $searchable_fields = array(
+    private static $searchable_fields = [
         'Name'
-    );
+    ];
 
     /**
      * @var array
      */
-    private static $summary_fields = array(
+    private static $summary_fields = [
         'Name'
-    );
+    ];
 
     /**
      * @return array
      */
     public function providePermissions()
     {
-        return array(
+        return [
             'MANAGE_MENU_SETS' => 'Manage Menu Sets',
-        );
+        ];
     }
 
     /**
      * @param mixed $member
+     * @param array $context
      * @return boolean
      */
-    public function canCreate($member = null)
+    public function canCreate($member = null, $context = [])
     {
         return Permission::check('MANAGE_MENU_SETS');
     }
@@ -104,7 +118,9 @@ class MenuSet extends DataObject implements PermissionProvider
         parent::requireDefaultRecords();
 
         foreach ($this->getDefaultSetNames() as $name) {
-            $existingRecord = MenuSet::get()->filter('Name', $name)->first();
+            $existingRecord = MenuSet::get()
+                ->filter('Name', $name)
+                ->first();
 
             if (!$existingRecord) {
                 $set = new MenuSet();

@@ -1,5 +1,9 @@
 <?php
 
+namespace Heyday\MenuManager;
+
+use SilverStripe\Admin\ModelAdmin;
+
 /**
  * Class MenuAdmin
  */
@@ -8,14 +12,14 @@ class MenuAdmin extends ModelAdmin
     /**
      * @var array
      */
-    private static $managed_models = array(
+    private static $managed_models = [
         'MenuSet'
-    );
+    ];
 
     /**
      * @var string
      */
-    private static $url_segment = 'menu';
+    private static $url_segment = 'menu-manager';
 
     /**
      * @var string
@@ -25,5 +29,5 @@ class MenuAdmin extends ModelAdmin
     /**
      * @var array
      */
-    private static $model_importers = array();
+    private static $model_importers = [];
 }

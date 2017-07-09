@@ -1,5 +1,10 @@
 <?php
 
+namespace Heyday\MenuManager;
+
+use SilverStripe\ORM\DataObject;
+use SilverStripe\View\TemplateGlobalProvider;
+
 class MenuManagerTemplateProvider implements TemplateGlobalProvider
 {
     /**
@@ -7,9 +12,9 @@ class MenuManagerTemplateProvider implements TemplateGlobalProvider
      */
     public static function get_template_global_variables()
     {
-        return array(
+        return [
             'MenuSet' => 'MenuSet'
-        );
+        ];
     }
 
     /**
@@ -20,9 +25,9 @@ class MenuManagerTemplateProvider implements TemplateGlobalProvider
     {
         return MenuSet::get()
             ->filter(
-                array(
+                [
                     'Name' => $name
-                )
+                ]
             )->first();
     }
 }
