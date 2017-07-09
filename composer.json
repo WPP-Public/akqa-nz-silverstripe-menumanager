@@ -15,7 +15,7 @@
 		"symbiote/gridfieldextensions": "^3.0"
 	},
 	"autoload": {
-		"psr-4": {git sttat
+		"psr-4": {
 			"Heyday\\MenuManager\\": "code/"
 		}
 	},
