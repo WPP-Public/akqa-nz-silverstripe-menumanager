@@ -16,7 +16,7 @@ To install drop the silverstripe-menumanager directory into your SilverStripe ro
 
 Once both of these are installed, you can run `dev/build?flush=1`
 
-###Composer
+### Composer
 
 Installing from composer is easy, 
 
@@ -25,7 +25,7 @@ Create or edit a `composer.json` file in the root of your SilverStripe project, 
 ```json
 {
     "require": {
-        "heyday/silverstripe-menumanager": "~2.1.0"
+        "heyday/silverstripe-menumanager": "~3.0.0"
     }
 }
 ```
@@ -92,8 +92,8 @@ Can be used as a check to see if 'target="_blank"' should be added to links.
 
 This project follows the standards defined in:
 
-* [PSR-1](https://github.com/pmjones/fig-standards/blob/psr-1-style-guide/proposed/PSR-1-basic.md)
-* [PSR-2](https://github.com/pmjones/fig-standards/blob/psr-1-style-guide/proposed/PSR-2-advanced.md)
+* [PSR-1](http://www.php-fig.org/psr/psr-1/)
+* [PSR-2](http://www.php-fig.org/psr/psr-2/)
 
 
 
