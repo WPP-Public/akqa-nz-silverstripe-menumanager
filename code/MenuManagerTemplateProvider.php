@@ -13,7 +13,7 @@ class MenuManagerTemplateProvider implements TemplateGlobalProvider
     public static function get_template_global_variables()
     {
         return [
-            'MenuSet' => 'Heyday\MenuManager\MenuSet'
+            'MenuSet' => 'MenuSet'
         ];
     }
 
