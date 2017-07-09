@@ -1,16 +1,16 @@
-#Heyday Menu Manager
+# Heyday Menu Manager
 
 The menu management module is for creating custom menu structures when the site tree hierarchy just won't do.
 
-The latest version only supports SilverStripe 3, see the 1.0 branch for a SilverStripe 2.4 compatible version.
+The latest version only supports SilverStripe 4, see the 2.0 branch for a SilverStripe 3.x compatible version.
 
-##License
+## License
 
 Menu Manager is licensed under an [MIT license](http://heyday.mit-license.org/)
 
-##Installation
+## Installation
 
-###Non-composer
+### Non-composer
 
 To install drop the silverstripe-menumanager directory into your SilverStripe root. You must also install [silverstripe-gridfieldextensions](https://github.com/ajshort/silverstripe-gridfieldextensions) as it is a dependency for this module.
 
@@ -32,7 +32,7 @@ Create or edit a `composer.json` file in the root of your SilverStripe project, 
 
 After completing this step, navigate in Terminal or similar to the SilverStripe root directory and run `composer install` or `composer update` depending on whether or not you have composer already in use.
 
-##Usage
+## Usage
 There are 2 main steps to creating a menu using menu management.
 
 1. Create a new MenuSet
@@ -88,7 +88,7 @@ Can be used as a check to see if 'target="_blank"' should be added to links.
 	<% end_loop %>
 
 
-###Code guidelines
+### Code guidelines
 
 This project follows the standards defined in:
 
