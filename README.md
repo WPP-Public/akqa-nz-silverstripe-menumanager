@@ -8,7 +8,7 @@ The latest version only supports SilverStripe 3, see the 1.0 branch for a Silver
 
 Menu Manager is licensed under an [MIT license](http://heyday.mit-license.org/)
 
-##Installation
+## Installation
 
 ### Non-composer
 
