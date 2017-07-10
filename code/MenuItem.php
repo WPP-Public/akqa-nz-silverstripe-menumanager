@@ -16,6 +16,11 @@ use SilverStripe\Security\PermissionProvider;
 class MenuItem extends DataObject implements PermissionProvider
 {
     /**
+     * @var string
+     */
+    private static $table_name = 'MenuItem';
+
+    /**
      * @var array
      */
     private static $db = [
