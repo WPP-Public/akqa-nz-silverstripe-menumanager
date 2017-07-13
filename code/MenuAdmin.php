@@ -25,6 +25,11 @@ class MenuAdmin extends ModelAdmin
      * @var string
      */
     private static $menu_title = 'Menu Management';
+    
+    /**
+     * @var string
+     */
+    private static $menu_icon_class = 'font-icon-list';
 
     /**
      * @var array
