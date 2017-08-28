@@ -2,6 +2,7 @@
 
 namespace Heyday\MenuManager;
 
+use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Forms\CheckboxField;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\TextField;
@@ -132,7 +133,7 @@ class MenuItem extends DataObject implements PermissionProvider
             new TreeDropdownField(
                 'PageID',
                 'Page',
-                'Page'
+                SiteTree::class
             )
         );
 
