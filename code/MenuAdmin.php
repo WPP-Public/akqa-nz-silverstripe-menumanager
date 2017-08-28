@@ -32,6 +32,11 @@ class MenuAdmin extends ModelAdmin
     private static $menu_icon_class = 'font-icon-list';
 
     /**
+     * @var string
+     */
+	private static $menu_icon = "silverstripe-menumanager/images/menu.png";
+
+	/**
      * @var array
      */
     private static $model_importers = [];
