@@ -97,6 +97,14 @@ class MenuItem extends DataObject implements PermissionProvider
     }
 
     /**
+     * @return string
+     */
+    public function getTitle()
+    {
+        return $this->MenuTitle ? $this->MenuTitle : '#{$this->ID}';
+    }
+
+    /**
      * @return FieldList
      */
     public function getCMSFields()
