@@ -12,7 +12,7 @@
 	],
 	"require": {
 		"silverstripe/framework": "~3.1",
-		"silverstripe-australia/gridfieldextensions": "^1.3.0"
+		"symbiote/silverstripe-gridfieldextensions": "^1.3.0"
 	},
 	"extra": {
 		"dev-master": "2.1.x-dev"
