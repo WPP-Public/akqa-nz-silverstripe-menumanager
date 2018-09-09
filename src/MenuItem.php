@@ -126,19 +126,19 @@ class MenuItem extends DataObject implements PermissionProvider
         $fields = new FieldList();
 
         $fields->push(
-            new TextField('MenuTitle', 'Menu Title (will default to selected page title)')
+            TextField::create('MenuTitle', 'Link Label')->setDescription('If left blank, will default to the selected page\'s name.')
         );
 
         $fields->push(
-            new TreeDropdownField(
+            TreeDropdownField::create(
                 'PageID',
-                'Page',
+                'Page on this site',
                 SiteTree::class
-            )
+            )->setDescription('Leave blank if you wish to manually specify the URL below.')
         );
 
-        $fields->push(new TextField('Link', 'Link (use when not specifying a page)'));
-        $fields->push(new CheckboxField('IsNewWindow', 'Open in a new window?'));
+        $fields->push(TextField::create('Link', 'URL')->setDescription('Enter a full URL to link to another website.'));
+        $fields->push(CheckboxField::create('IsNewWindow', 'Open in a new window?'));
 
         $this->extend('updateCMSFields', $fields);
 
