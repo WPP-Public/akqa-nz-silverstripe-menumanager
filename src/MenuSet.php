@@ -86,7 +86,7 @@ class MenuSet extends DataObject implements PermissionProvider
      */
     public function canEdit($member = null)
     {
-        return Permission::check('MANAGE_MENU_SETS');
+        return Permission::check('MANAGE_MENU_SETS') || Permission::check('MANAGE_MENU_ITEMS');
     }
 
     /**
@@ -95,7 +95,7 @@ class MenuSet extends DataObject implements PermissionProvider
      */
     public function canView($member = null)
     {
-        return Permission::check('MANAGE_MENU_SETS');
+        return Permission::check('MANAGE_MENU_SETS') || Permission::check('MANAGE_MENU_ITEMS');
     }
 
     /**
