@@ -126,7 +126,8 @@ class MenuItem extends DataObject implements PermissionProvider
         $fields = new FieldList();
 
         $fields->push(
-            TextField::create('MenuTitle', 'Link Label')->setDescription('If left blank, will default to the selected page\'s name.')
+            TextField::create('MenuTitle', 'Link Label')
+            ->setDescription('If left blank, will default to the selected page\'s name.')
         );
 
         $fields->push(
@@ -137,7 +138,8 @@ class MenuItem extends DataObject implements PermissionProvider
             )->setDescription('Leave blank if you wish to manually specify the URL below.')
         );
 
-        $fields->push(TextField::create('Link', 'URL')->setDescription('Enter a full URL to link to another website.'));
+        $fields->push(TextField::create('Link', 'URL')
+                    ->setDescription('Enter a full URL to link to another website.'));
         $fields->push(CheckboxField::create('IsNewWindow', 'Open in a new window?'));
 
         $this->extend('updateCMSFields', $fields);
