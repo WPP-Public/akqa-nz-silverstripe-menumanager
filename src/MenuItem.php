@@ -5,6 +5,7 @@ namespace Heyday\MenuManager;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Forms\CheckboxField;
 use SilverStripe\Forms\FieldList;
+use SilverStripe\Forms\TabSet;
 use SilverStripe\Forms\TextField;
 use SilverStripe\Forms\TreeDropdownField;
 use SilverStripe\ORM\DataObject;
@@ -123,24 +124,22 @@ class MenuItem extends DataObject implements PermissionProvider
      */
     public function getCMSFields()
     {
-        $fields = new FieldList();
+        $fields = FieldList::create(TabSet::create('Root'));
 
-        $fields->push(
-            TextField::create('MenuTitle', 'Link Label')
-            ->setDescription('If left blank, will default to the selected page\'s name.')
-        );
-
-        $fields->push(
-            TreeDropdownField::create(
-                'PageID',
-                'Page on this site',
-                SiteTree::class
-            )->setDescription('Leave blank if you wish to manually specify the URL below.')
-        );
-
-        $fields->push(TextField::create('Link', 'URL')
-                    ->setDescription('Enter a full URL to link to another website.'));
-        $fields->push(CheckboxField::create('IsNewWindow', 'Open in a new window?'));
+        $fields->addFieldsToTab('Root.main',
+            [
+                TextField::create('MenuTitle', 'Link Label')
+                    ->setDescription('If left blank, will default to the selected page\'s name.'),
+                TreeDropdownField::create(
+                    'PageID',
+                    'Page on this site',
+                    SiteTree::class
+                )
+                    ->setDescription('Leave blank if you wish to manually specify the URL below.'),
+                TextField::create('Link', 'URL')
+                    ->setDescription('Enter a full URL to link to another website.'),
+                CheckboxField::create('IsNewWindow', 'Open in a new window?')
+            ]);
 
         $this->extend('updateCMSFields', $fields);
 

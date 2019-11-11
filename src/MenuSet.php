@@ -5,6 +5,7 @@ namespace Heyday\MenuManager;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldConfig_RelationEditor;
+use SilverStripe\Forms\TabSet;
 use SilverStripe\Forms\TextField;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
@@ -142,13 +143,14 @@ class MenuSet extends DataObject implements PermissionProvider
      */
     public function getCMSFields()
     {
-        $fields = new FieldList();
+        $fields = FieldList::create(TabSet::create('Root'));
 
         if ($this->ID != null) {
             $fields->removeByName('Name');
 
-            $fields->push(
-                $menuItems = new GridField(
+            $fields->addFieldToTab(
+                'Root.Main',
+                new GridField(
                     'MenuItems',
                     'Menu Items',
                     $this->MenuItems(),
@@ -159,7 +161,9 @@ class MenuSet extends DataObject implements PermissionProvider
             $config->addComponent(new GridFieldOrderableRows('Sort'));
 
         } else {
-            $fields->push(new TextField('Name', 'Name (this field can\'t be changed once set)'));
+            $fields->addFieldToTab('Root.Main',
+                new TextField('Name', 'Name (this field can\'t be changed once set)')
+            );
         }
 
         $this->extend('updateCMSFields', $fields);
