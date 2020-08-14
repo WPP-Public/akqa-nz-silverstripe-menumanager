@@ -76,10 +76,19 @@ the MenuItems associated Page.
 If you enter a link in this field and then pick a Page as well the link will
 be overwritten by the Page you chose.
 
-
 #### IsNewWindow
 Can be used as a check to see if 'target="_blank"' should be added to links.
 
+### Disable creating Menu Sets in the CMS
+
+Sometimes the defined `default_sets` are all the menu's a project needs. You can disable the ability to create new Menu Sets in the CMS:
+
+```yml
+Heyday\MenuManager\MenuAdmin:
+  enable_cms_create: false
+```
+
+_Note: Non-default Menu Sets can still be deleted, to help tidy unwanted CMS content._
 
 ### Usage in template
 
