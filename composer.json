@@ -15,6 +15,9 @@
 		"silverstripe/vendor-plugin": "^1.0",
 		"symbiote/silverstripe-gridfieldextensions": "^3.0"
 	},
+	"require-dev": {
+		"squizlabs/php_codesniffer": "^3.5"
+	},
 	"autoload": {
 		"psr-4": {
 			"Heyday\\MenuManager\\": "src/"
