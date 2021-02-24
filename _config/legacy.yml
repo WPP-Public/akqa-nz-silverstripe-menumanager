@@ -1,0 +1,4 @@
+SilverStripe\ORM\DatabaseAdmin:
+  classname_value_remapping:
+    MenuItem: Heyday\MenuManager\MenuItem
+    MenuSet: Heyday\MenuManager\MenuSet
