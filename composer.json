@@ -1,5 +1,5 @@
 {
-	"name": "heyday/menumanager",
+	"name": "heyday/silverstripe-menumanager",
 	"type": "silverstripe-vendormodule",
 	"description": "Allows complex menu management to be handled through the CMS when a simple tree structure is not enough.",
 	"license": "MIT",
