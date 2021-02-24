@@ -86,6 +86,24 @@ Can be used as a check to see if 'target="_blank"' should be added to links.
 	<% loop $MenuSet('YourMenuName').MenuItems %>
 		<a href="$Link" class="$LinkingMode">$MenuTitle</a>
 	<% end_loop %>
+	
+#### Enabling partial caching
+
+[Partial caching](https://docs.silverstripe.org/en/4/developer_guides/performance/partial_caching/) can be enabled with your menu to speed up rendering of your templates.
+
+	<% with $MenuSet('YourMenuName') %>
+	<% cached 'YourMenuNameCacheKey', $LastEdited, $MenuItems.max('LastEdited'), $MenuItems.count %>
+	<% if $MenuItems %>
+	<nav>
+		<% loop $MenuItems %>
+		<a href="$Link" class="$LinkingMode">
+			$MenuTitle.XML
+		</a>
+		<% end_loop %>
+	</nav>
+	<% end_if %>
+	<% end_cached %>
+	<% end_with %>
 
 
 ### Code guidelines
