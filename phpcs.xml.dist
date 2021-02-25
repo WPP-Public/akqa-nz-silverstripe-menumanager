@@ -3,10 +3,10 @@
     <description>CodeSniffer ruleset for SilverStripe coding conventions.</description>
 
     <file>src</file>
-    <file>tests</file>
 
     <!-- base rules are PSR-2 -->
     <rule ref="PSR2" >
         <!-- Current exclusions -->
+        <exclude name="PSR1.Methods.CamelCapsMethodName" />
     </rule>
 </ruleset>
