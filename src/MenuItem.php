@@ -40,8 +40,8 @@ class MenuItem extends DataObject implements PermissionProvider
      * @var array
      */
     private static $has_one = [
-        'Page' => 'SilverStripe\CMS\Model\SiteTree', // page the MenuItem refers to
-        'MenuSet' => 'Heyday\MenuManager\MenuSet' // parent MenuSet
+        'Page' => SiteTree::class, // page the MenuItem refers to
+        'MenuSet' => MenuSet::class, // parent MenuSet
     ];
 
     /**
@@ -126,7 +126,8 @@ class MenuItem extends DataObject implements PermissionProvider
     {
         $fields = FieldList::create(TabSet::create('Root'));
 
-        $fields->addFieldsToTab('Root.main',
+        $fields->addFieldsToTab(
+            'Root.main',
             [
                 TextField::create('MenuTitle', 'Link Label')
                     ->setDescription('If left blank, will default to the selected page\'s name.'),
@@ -139,7 +140,8 @@ class MenuItem extends DataObject implements PermissionProvider
                 TextField::create('Link', 'URL')
                     ->setDescription('Enter a full URL to link to another website.'),
                 CheckboxField::create('IsNewWindow', 'Open in a new window?')
-            ]);
+            ]
+        );
 
         $this->extend('updateCMSFields', $fields);
 

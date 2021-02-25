@@ -35,7 +35,7 @@ class MenuSet extends DataObject implements PermissionProvider
      * @var array
      */
     private static $has_many = [
-        'MenuItems' => 'Heyday\MenuManager\MenuItem'
+        'MenuItems' => MenuItem::class,
     ];
 
     /**
@@ -159,9 +159,9 @@ class MenuSet extends DataObject implements PermissionProvider
             );
 
             $config->addComponent(new GridFieldOrderableRows('Sort'));
-
         } else {
-            $fields->addFieldToTab('Root.Main',
+            $fields->addFieldToTab(
+                'Root.Main',
                 new TextField('Name', 'Name (this field can\'t be changed once set)')
             );
         }

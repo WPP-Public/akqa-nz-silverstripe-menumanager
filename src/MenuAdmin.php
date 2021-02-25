@@ -13,7 +13,7 @@ class MenuAdmin extends ModelAdmin
      * @var array
      */
     private static $managed_models = [
-        'Heyday\MenuManager\MenuSet'
+        MenuSet::class,
     ];
 
     /**
@@ -25,7 +25,7 @@ class MenuAdmin extends ModelAdmin
      * @var string
      */
     private static $menu_title = 'Menu Management';
-    
+
     /**
      * @var string
      */
