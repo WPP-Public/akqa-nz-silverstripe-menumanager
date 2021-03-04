@@ -46,19 +46,12 @@ class MenuSet extends DataObject implements PermissionProvider
     ];
 
     /**
-     * @var array
-     */
-    private static $summary_fields = [
-        'Name'
-    ];
-
-    /**
      * @return array
      */
     public function providePermissions()
     {
         return [
-            'MANAGE_MENU_SETS' => 'Manage Menu Sets',
+            'MANAGE_MENU_SETS' => _t(__CLASS__ . '.ManageMenuSets', 'Manage Menu Sets'),
         ];
     }
 
@@ -162,7 +155,15 @@ class MenuSet extends DataObject implements PermissionProvider
         } else {
             $fields->addFieldToTab(
                 'Root.Main',
-                new TextField('Name', 'Name (this field can\'t be changed once set)')
+                TextField::create(
+                    'Name',
+                    _t(__CLASS__ . '.DB_Name', 'Name')
+                )->setDescription(
+                    _t(
+                        __CLASS__ . '.DB_Name_Description',
+                        'This field can\'t be changed once set'
+                    )
+                )
             );
         }
 
@@ -192,5 +193,15 @@ class MenuSet extends DataObject implements PermissionProvider
     protected function getDefaultSetNames()
     {
         return $this->config()->get('default_sets') ?: [];
+    }
+
+    /**
+     * @return array
+     */
+    public function summaryFields()
+    {
+        return [
+            'Name' => _t(__CLASS__ . '.DB_Name', 'Name')
+        ];
     }
 }
