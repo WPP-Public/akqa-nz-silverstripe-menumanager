@@ -68,7 +68,8 @@ class MenuSet extends DataObject implements PermissionProvider
         $existing = MenuManagerTemplateProvider::MenuSet($this->Name);
 
         /**
-         * @deprecated Since 4.0 Use an index for the Name field instead https://docs.silverstripe.org/en/4/developer_guides/model/indexes/
+         * @deprecated Since 4.0
+         * Use an index for the Name field instead https://docs.silverstripe.org/en/4/developer_guides/model/indexes/
          */
         if ($existing && $existing->ID !== $this->ID) {
             // MenuSets must have a unique Name
