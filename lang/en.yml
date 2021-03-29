@@ -10,6 +10,7 @@ en:
     DB_Name: "Name"
     DB_Name_Description: "This field can't be changed once set"
     ManageMenuSets: "Manage Menu Sets"
+    AlreadyExists: 'A Menu Set with the Name "{name}" already exists'
   Heyday\MenuManager\MenuItem:
     SINGULARNAME: "Menu Item"
     PLURALNAME: "Menu Items"

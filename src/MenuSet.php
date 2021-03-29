@@ -74,7 +74,11 @@ class MenuSet extends DataObject implements PermissionProvider
         if ($existing && $existing->ID !== $this->ID) {
             // MenuSets must have a unique Name
             $result->addError(
-                sprintf('A "%s" with the Name "%s" already exists', static::class, $this->Name),
+                _t(
+                    __CLASS__ . 'AlreadyExists',
+                    'A Menu Set with the Name "{name}" already exists',
+                    ['name' => $this->Name]
+                ),
                 ValidationResult::TYPE_ERROR,
             );
         }
