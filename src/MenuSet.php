@@ -79,7 +79,7 @@ class MenuSet extends DataObject implements PermissionProvider
                     'A Menu Set with the Name "{name}" already exists',
                     ['name' => $this->Name]
                 ),
-                ValidationResult::TYPE_ERROR,
+                ValidationResult::TYPE_ERROR
             );
         }
 
