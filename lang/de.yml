@@ -24,7 +24,7 @@ de:
     DB_MenuTitle: "Linkname"
     DB_MenuTitle_Description: "Es wird der Seitenname benutzt, wenn diese Feld leer gelassen wird."
     DB_PageID: "Seite"
-    DB_PageID_Description: "Leer lassen um die manuelle Url unterhalb zy benutzen."
+    DB_PageID_Description: "Leer lassen um die manuelle Url unterhalb zu benutzen."
     DB_Link: "Url"
     DB_Link_Description: "Für externe Urls, Protokoll (zB. http:// oder https://) nicht vergessen."
     DB_IsNewWindow: "In neuem Tab öffnen?"
