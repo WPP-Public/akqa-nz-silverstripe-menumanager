@@ -6,6 +6,7 @@ use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldConfig_RelationEditor;
 use SilverStripe\Forms\TabSet;
+use SilverStripe\Forms\TextareaField;
 use SilverStripe\Forms\TextField;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
@@ -20,30 +21,24 @@ use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
  */
 class MenuSet extends DataObject implements PermissionProvider
 {
-    /**
-     * @var string
-     */
     private static $table_name = 'MenuSet';
 
-    /**
-     * @var array
-     */
     private static $db = [
-        'Name' => 'Varchar(255)'
+        'Name' => 'Varchar(255)',
+        'Description' => 'Text'
     ];
 
-    /**
-     * @var array
-     */
     private static $has_many = [
         'MenuItems' => MenuItem::class,
     ];
 
-    /**
-     * @var array
-     */
+    private static $cascade_deletes = [
+        'MenuItems'
+    ];
+
     private static $searchable_fields = [
-        'Name'
+        'Name',
+        'Description'
     ];
 
     /**
@@ -150,6 +145,7 @@ class MenuSet extends DataObject implements PermissionProvider
         return parent::canView($member);
     }
 
+
     /**
      * @return mixed
      */
@@ -157,6 +153,7 @@ class MenuSet extends DataObject implements PermissionProvider
     {
         return $this->MenuItems();
     }
+
 
     /**
      * Check if this menu set appears in the default sets config
@@ -166,6 +163,7 @@ class MenuSet extends DataObject implements PermissionProvider
     {
         return in_array($this->Name, $this->getDefaultSetNames());
     }
+
 
     /**
      * Set up default records based on the yaml config
@@ -180,7 +178,7 @@ class MenuSet extends DataObject implements PermissionProvider
                 ->first();
 
             if (!$existingRecord) {
-                $set = new MenuSet();
+                $set = MenuSet::create();
                 $set->Name = $name;
                 $set->write();
 
@@ -188,6 +186,7 @@ class MenuSet extends DataObject implements PermissionProvider
             }
         }
     }
+
 
     /**
      * @return FieldList
@@ -203,13 +202,18 @@ class MenuSet extends DataObject implements PermissionProvider
                 'Root.Main',
                 new GridField(
                     'MenuItems',
-                    'Menu Items',
+                    '',
                     $this->MenuItems(),
                     $config = GridFieldConfig_RelationEditor::create()
                 )
             );
 
             $config->addComponent(new GridFieldOrderableRows('Sort'));
+
+            $fields->addFieldToTab(
+                'Root.Meta',
+                TextareaField::create('Description', _t(__CLASS__ . '.DB_Description', 'Description'))
+            );
         } else {
             $fields->addFieldToTab(
                 'Root.Main',
@@ -223,12 +227,19 @@ class MenuSet extends DataObject implements PermissionProvider
                     )
                 )
             );
+
+            $fields->addFieldToTab(
+                'Root.Main',
+                TextareaField::create('Description', _t(__CLASS__ . '.DB_Description', 'Description'))
+            );
         }
+
 
         $this->extend('updateCMSFields', $fields);
 
         return $fields;
     }
+
 
     /**
      * {@inheritDoc}
@@ -246,6 +257,7 @@ class MenuSet extends DataObject implements PermissionProvider
         parent::onBeforeDelete();
     }
 
+
     /**
      * Get the MenuSet names configured under MenuSet.default_sets
      *
@@ -256,13 +268,16 @@ class MenuSet extends DataObject implements PermissionProvider
         return $this->config()->get('default_sets') ?: [];
     }
 
+
     /**
      * @return array
      */
     public function summaryFields()
     {
         return [
-            'Name' => _t(__CLASS__ . '.DB_Name', 'Name')
+            'Name' => _t(__CLASS__ . '.DB_Name', 'Name'),
+            'Description' => _t(__CLASS__ . '.DB_Description', 'Description'),
+            'MenuItems.Count' => _t(__CLASS__ . '.DB_Items', 'Items')
         ];
     }
 }
