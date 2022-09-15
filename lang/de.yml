@@ -1,0 +1,32 @@
+de:
+  Heyday\MenuManager\MenuAdmin:
+    MENUTITLE: "Menüs"
+  Heyday\MenuManager\MenuSet:
+    SINGULARNAME: "Menü"
+    PLURALNAME: "Menüs"
+    PLURALS:
+      one: "Ein Menü"
+      other: "{count} Menüs"
+    DB_Name: "Name"
+    DB_Name_Description: "Dieses Feld kann nach Erstellung nicht mehr angepasst werden."
+    ManageMenuSets: "Menüs bearbeiten"
+    AlreadyExists: 'Es existiert schon ein Menü mit dem Namen "{name}".'
+  Heyday\MenuManager\MenuItem:
+    SINGULARNAME: "Menüpunkt"
+    PLURALNAME: "Menüpunkte"
+    PLURALS:
+      one: "Ein Menüpunkt"
+      other: "{count} Menüpunkte"
+    Label: "Label"
+    PageTitle: "Seitenname"
+    Link: "Link"
+    NewTab: "In neuem Tab öffnen?"
+    DB_MenuTitle: "Linkname"
+    DB_MenuTitle_Description: "Es wird der Seitenname benutzt, wenn diese Feld leer gelassen wird."
+    DB_PageID: "Seite"
+    DB_PageID_Description: "Leer lassen um die manuelle Url unterhalb zu benutzen."
+    DB_Link: "Url"
+    DB_Link_Description: "Für externe Urls, Protokoll (zB. http:// oder https://) nicht vergessen."
+    DB_IsNewWindow: "In neuem Tab öffnen?"
+    ManageMenuItems: "Menüpunkte bearbeiten"
+
