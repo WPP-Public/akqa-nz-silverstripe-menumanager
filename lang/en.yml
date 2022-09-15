@@ -1,0 +1,32 @@
+en:
+  Heyday\MenuManager\MenuAdmin:
+    MENUTITLE: "Menus"
+  Heyday\MenuManager\MenuSet:
+    SINGULARNAME: "Menu Set"
+    PLURALNAME: "Menu Sets"
+    PLURALS:
+      one: "A Menu Set"
+      other: "{count} Menu Sets"
+    DB_Name: "Name"
+    DB_Name_Description: "This field can't be changed once set"
+    ManageMenuSets: "Manage Menu Sets"
+    AlreadyExists: 'A Menu Set with the Name "{name}" already exists'
+  Heyday\MenuManager\MenuItem:
+    SINGULARNAME: "Menu Item"
+    PLURALNAME: "Menu Items"
+    PLURALS:
+      one: "A Menu Item"
+      other: "{count} Menu Items"
+    Label: "Label"
+    PageTitle: "Page Title"
+    Link: "Link"
+    NewTab: "Opens in a new tab?"
+    DB_MenuTitle: "Link Label"
+    DB_MenuTitle_Description: "If left blank, will default to the selected page's name."
+    DB_PageID: "Page on this site"
+    DB_PageID_Description: "Leave blank if you wish to manually specify the URL below."
+    DB_Link: "URL"
+    DB_Link_Description: "Enter a full URL to link to another website."
+    DB_IsNewWindow: "Open in a new tab?"
+    ManageMenuItems: "Manage Menu Items"
+

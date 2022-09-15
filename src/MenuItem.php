@@ -40,8 +40,8 @@ class MenuItem extends DataObject implements PermissionProvider
      * @var array
      */
     private static $has_one = [
-        'Page' => 'SilverStripe\CMS\Model\SiteTree', // page the MenuItem refers to
-        'MenuSet' => 'Heyday\MenuManager\MenuSet' // parent MenuSet
+        'Page' => SiteTree::class, // page the MenuItem refers to
+        'MenuSet' => MenuSet::class, // parent MenuSet
     ];
 
     /**
@@ -53,18 +53,13 @@ class MenuItem extends DataObject implements PermissionProvider
     ];
 
     /**
-     * @var array
+     * @return string
      */
-    private static $summary_fields = [
-        'MenuTitle' => 'Title',
-        'Page.Title' => 'Page Title',
-        'Link' => 'Link',
-        'IsNewWindowNice' => 'Opens in new window?'
-    ];
-
     public function IsNewWindowNice()
     {
-        return $this->IsNewWindow ? 'Yes' : 'No';
+        return $this->IsNewWindow
+            ? _t('SilverStripe\\Forms\\CheckboxField.YESANSWER', 'Yes')
+            : _t('SilverStripe\\Forms\\CheckboxField.NOANSWER', 'No');
     }
 
     /**
@@ -78,7 +73,7 @@ class MenuItem extends DataObject implements PermissionProvider
     public function providePermissions()
     {
         return [
-            'MANAGE_MENU_ITEMS' => 'Manage Menu Items'
+            'MANAGE_MENU_ITEMS' => _t(__CLASS__ . '.ManageMenuItems', 'Manage Menu Items')
         ];
     }
 
@@ -126,20 +121,46 @@ class MenuItem extends DataObject implements PermissionProvider
     {
         $fields = FieldList::create(TabSet::create('Root'));
 
-        $fields->addFieldsToTab('Root.main',
+        $fields->addFieldsToTab(
+            'Root.main',
             [
-                TextField::create('MenuTitle', 'Link Label')
-                    ->setDescription('If left blank, will default to the selected page\'s name.'),
+                TextField::create(
+                    'MenuTitle',
+                    _t(__CLASS__ . '.DB_MenuTitle', 'Link Label')
+                )->setDescription(
+                    _t(
+                        __CLASS__ . '.DB_MenuTitle_Description',
+                        'If left blank, will default to the selected page\'s name.'
+                    )
+                ),
+
                 TreeDropdownField::create(
                     'PageID',
-                    'Page on this site',
+                    _t(__CLASS__ . '.DB_PageID', 'Page on this site'),
                     SiteTree::class
-                )
-                    ->setDescription('Leave blank if you wish to manually specify the URL below.'),
-                TextField::create('Link', 'URL')
-                    ->setDescription('Enter a full URL to link to another website.'),
-                CheckboxField::create('IsNewWindow', 'Open in a new window?')
-            ]);
+                )->setDescription(
+                    _t(
+                        __CLASS__ . '.DB_PageID_Description',
+                        'Leave blank if you wish to manually specify the URL below.'
+                    )
+                ),
+
+                TextField::create(
+                    'Link',
+                    _t(__CLASS__ . '.DB_Link', 'URL')
+                )->setDescription(
+                    _t(
+                        __CLASS__ . '.DB_Link_Description',
+                        'Enter a full URL to link to another website.'
+                    )
+                ),
+
+                CheckboxField::create(
+                    'IsNewWindow',
+                    _t(__CLASS__ . '.DB_IsNewWindow', 'Open in a new window?')
+                ),
+            ]
+        );
 
         $this->extend('updateCMSFields', $fields);
 
@@ -203,5 +224,15 @@ class MenuItem extends DataObject implements PermissionProvider
         if ($this->PageID != 0) {
             $this->Link = null;
         }
+    }
+
+    public function summaryFields()
+    {
+        return [
+            'MenuTitle' => _t(__CLASS__ . '.Label', 'Label'),
+            'Page.Title' => _t(__CLASS__ . '.PageTitle', 'Page Title'),
+            'Link' => _t(__CLASS__ . '.DB_Link', 'Link'),
+            'IsNewWindowNice' => _t(__CLASS__ . '.NewTab', 'Opens in a new tab?'),
+        ];
     }
 }

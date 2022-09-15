@@ -10,6 +10,7 @@ use SilverStripe\Forms\TextField;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
+use SilverStripe\ORM\ValidationResult;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
 use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
@@ -35,7 +36,7 @@ class MenuSet extends DataObject implements PermissionProvider
      * @var array
      */
     private static $has_many = [
-        'MenuItems' => 'Heyday\MenuManager\MenuItem'
+        'MenuItems' => MenuItem::class,
     ];
 
     /**
@@ -46,20 +47,43 @@ class MenuSet extends DataObject implements PermissionProvider
     ];
 
     /**
-     * @var array
-     */
-    private static $summary_fields = [
-        'Name'
-    ];
-
-    /**
      * @return array
      */
     public function providePermissions()
     {
         return [
-            'MANAGE_MENU_SETS' => 'Manage Menu Sets',
+            'MANAGE_MENU_SETS' => _t(__CLASS__ . '.ManageMenuSets', 'Manage Menu Sets'),
         ];
+    }
+
+    /**
+     * Check for existing MenuSets with the same name
+     *
+     * {@inheritDoc}
+     */
+    public function validate()
+    {
+        $result = parent::validate();
+
+        $existing = MenuManagerTemplateProvider::MenuSet($this->Name);
+
+        /**
+         * @deprecated Since 4.0
+         * Use an index for the Name field instead https://docs.silverstripe.org/en/4/developer_guides/model/indexes/
+         */
+        if ($existing && $existing->ID !== $this->ID) {
+            // MenuSets must have a unique Name
+            $result->addError(
+                _t(
+                    __CLASS__ . 'AlreadyExists',
+                    'A Menu Set with the Name "{name}" already exists',
+                    ['name' => $this->Name]
+                ),
+                ValidationResult::TYPE_ERROR
+            );
+        }
+
+        return $result;
     }
 
     /**
@@ -69,7 +93,11 @@ class MenuSet extends DataObject implements PermissionProvider
      */
     public function canCreate($member = null, $context = [])
     {
-        return Permission::check('MANAGE_MENU_SETS');
+        if (Permission::check('MANAGE_MENU_SETS')) {
+            return true;
+        }
+
+        return parent::canCreate($member, $context);
     }
 
     /**
@@ -78,7 +106,22 @@ class MenuSet extends DataObject implements PermissionProvider
      */
     public function canDelete($member = null)
     {
-        return !$this->isDefaultSet() && Permission::check('MANAGE_MENU_SETS');
+        $canDelete = parent::canDelete($member);
+
+        // Backwards compatibility for duplicate default sets
+        $existing = MenuManagerTemplateProvider::MenuSet($this->Name);
+        $isDuplicate = $existing && $existing->ID !== $this->ID;
+
+        if ($this->isDefaultSet() && !$isDuplicate) {
+            // Default menu's cannot be deleted
+            $canDelete = false;
+        }
+
+        if ($canDelete !== null) {
+            return $canDelete;
+        }
+
+        return Permission::check('MANAGE_MENU_SETS');
     }
 
     /**
@@ -87,7 +130,11 @@ class MenuSet extends DataObject implements PermissionProvider
      */
     public function canEdit($member = null)
     {
-        return Permission::check('MANAGE_MENU_SETS') || Permission::check('MANAGE_MENU_ITEMS');
+        if (Permission::check('MANAGE_MENU_SETS') || Permission::check('MANAGE_MENU_ITEMS')) {
+            return true;
+        }
+
+        return parent::canEdit($member);
     }
 
     /**
@@ -96,7 +143,11 @@ class MenuSet extends DataObject implements PermissionProvider
      */
     public function canView($member = null)
     {
-        return Permission::check('MANAGE_MENU_SETS') || Permission::check('MANAGE_MENU_ITEMS');
+        if (Permission::check('MANAGE_MENU_SETS') || Permission::check('MANAGE_MENU_ITEMS')) {
+            return true;
+        }
+
+        return parent::canView($member);
     }
 
     /**
@@ -159,10 +210,18 @@ class MenuSet extends DataObject implements PermissionProvider
             );
 
             $config->addComponent(new GridFieldOrderableRows('Sort'));
-
         } else {
-            $fields->addFieldToTab('Root.Main',
-                new TextField('Name', 'Name (this field can\'t be changed once set)')
+            $fields->addFieldToTab(
+                'Root.Main',
+                TextField::create(
+                    'Name',
+                    _t(__CLASS__ . '.DB_Name', 'Name')
+                )->setDescription(
+                    _t(
+                        __CLASS__ . '.DB_Name_Description',
+                        'This field can\'t be changed once set'
+                    )
+                )
             );
         }
 
@@ -171,6 +230,9 @@ class MenuSet extends DataObject implements PermissionProvider
         return $fields;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function onBeforeDelete()
     {
         $menuItems = $this->MenuItems();
@@ -192,5 +254,15 @@ class MenuSet extends DataObject implements PermissionProvider
     protected function getDefaultSetNames()
     {
         return $this->config()->get('default_sets') ?: [];
+    }
+
+    /**
+     * @return array
+     */
+    public function summaryFields()
+    {
+        return [
+            'Name' => _t(__CLASS__ . '.DB_Name', 'Name')
+        ];
     }
 }

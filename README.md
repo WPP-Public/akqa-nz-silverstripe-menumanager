@@ -1,5 +1,7 @@
 # Heyday Menu Manager
 
+[![Build Status](https://travis-ci.com/heyday/silverstripe-menumanager.svg?branch=master)](https://travis-ci.com/heyday/silverstripe-menumanager)
+
 The menu management module is for creating custom menu structures when the site tree hierarchy just won't do.
 
 The latest version only supports SilverStripe 4, see the 2.0 branch for a SilverStripe 3.x compatible version.
@@ -95,6 +97,24 @@ _Note: Non-default Menu Sets can still be deleted, to help tidy unwanted CMS con
 	<% loop $MenuSet('YourMenuName').MenuItems %>
 		<a href="$Link" class="$LinkingMode">$MenuTitle</a>
 	<% end_loop %>
+	
+#### Enabling partial caching
+
+[Partial caching](https://docs.silverstripe.org/en/4/developer_guides/performance/partial_caching/) can be enabled with your menu to speed up rendering of your templates.
+
+	<% with $MenuSet('YourMenuName') %>
+	<% cached 'YourMenuNameCacheKey', $LastEdited, $MenuItems.max('LastEdited'), $MenuItems.count %>
+	<% if $MenuItems %>
+	<nav>
+		<% loop $MenuItems %>
+		<a href="$Link" class="$LinkingMode">
+			$MenuTitle.XML
+		</a>
+		<% end_loop %>
+	</nav>
+	<% end_if %>
+	<% end_cached %>
+	<% end_with %>
 
 
 ### Code guidelines
