@@ -1,6 +1,4 @@
-# Heyday Menu Manager
-
-[![Build Status](https://travis-ci.com/heyday/silverstripe-menumanager.svg?branch=master)](https://travis-ci.com/heyday/silverstripe-menumanager)
+# Silverstripe Menu Manager
 
 The menu management module is for creating custom menu structures when the site
 tree hierarchy just won't do.

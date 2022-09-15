@@ -1,31 +1,24 @@
 {
-	"name": "heyday/silverstripe-menumanager",
-	"type": "silverstripe-vendormodule",
-	"description": "Allows complex menu management to be handled through the CMS when a simple tree structure is not enough.",
-	"license": "MIT",
-	"authors": [
-		{
-			"name": "Heyday Developers",
-			"email": "dev@heyday.co.nz",
-			"role": "Developer"
-		}
-	],
-	"require": {
-		"silverstripe/framework": "~4.0",
-		"silverstripe/vendor-plugin": "^1.0",
-		"symbiote/silverstripe-gridfieldextensions": "^3.0"
-	},
-	"require-dev": {
-		"squizlabs/php_codesniffer": "^3.5"
-	},
-	"autoload": {
-		"psr-4": {
-			"Heyday\\MenuManager\\": "src/"
-		}
-	},
-	"extra": {
-		"dev-main": "3.0.x-dev"
-	},
-	"minimum-stability": "dev",
-	"prefer-stable": true
+    "name": "heyday/silverstripe-menumanager",
+    "type": "silverstripe-vendormodule",
+    "description": "Allows complex menu management to be handled through the CMS when a simple tree structure is not enough.",
+    "license": "MIT",
+    "require": {
+        "silverstripe/framework": "~4.0",
+        "silverstripe/vendor-plugin": "^1.0",
+        "symbiote/silverstripe-gridfieldextensions": "^3.0"
+    },
+    "require-dev": {
+        "squizlabs/php_codesniffer": "^3.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Heyday\\MenuManager\\": "src/"
+        }
+    },
+    "extra": {
+        "dev-main": "3.1.x-dev"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }
