@@ -17,7 +17,8 @@ class MenuManagerTemplateProvider implements TemplateGlobalProvider
     public static function get_template_global_variables()
     {
         return [
-            'MenuSet' => 'MenuSet'
+            'MenuSet' => 'MenuSet',
+            'MenuSets' => 'MenuSets'
         ];
     }
 
@@ -29,6 +30,16 @@ class MenuManagerTemplateProvider implements TemplateGlobalProvider
     {
         return Injector::inst()->get(self::class)->findMenuSetByName($name);
     }
+
+    /**
+     * @param $name
+     * @return MenuSet|null
+     */
+   public static function MenuSets()
+   {
+       return MenuSet::get();
+   }
+
 
     /**
      * Find a MenuSet by name

@@ -116,6 +116,24 @@ content._
     <% end_loop %>
 ```
 
+To loop through *all* MenuSets and their items:
+
+	<% loop $MenuSets %>
+		<% loop $MenuItems %>
+			<a href="$Link" class="$LinkingMode">$MenuTitle</a>
+		<% end_loop %>
+	<% end_loop %>
+
+Optionally you can also limit the number of MenuSets and MenuItems that are looped through.
+
+The example below will fetch the top 4 MenuSets (as seen in Menu Management), and the top 5 MenuItems for each:
+
+	<% loop $MenuSets.Limit(4) %>
+		<% loop $MenuItems.Limit(5) %>
+			<a href="$Link" class="$LinkingMode">$MenuTitle</a>
+		<% end_loop %>
+	<% end_loop %>
+
 #### Enabling partial caching
 
 [Partial caching](https://docs.silverstripe.org/en/4/developer_guides/performance/partial_caching/)
@@ -133,6 +151,15 @@ can be enabled with your menu to speed up rendering of your templates.
     <% end_if %>
     <% end_cached %>
     <% end_with %>
+```
+
+### Allow sorting of MenuSets
+
+By default menu sets cannot be sorted, however, you can set your configuration to allow it.
+
+```yaml
+Heyday\MenuManager\MenuSet:
+  allow_sorting: true
 ```
 
 

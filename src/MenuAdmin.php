@@ -3,9 +3,11 @@
 namespace Heyday\MenuManager;
 
 use SilverStripe\Admin\ModelAdmin;
+use SilverStripe\Core\Config\Config;
 use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldAddNewButton;
 use SilverStripe\Forms\GridField\GridFieldImportButton;
+use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
 
 /**
  * Class MenuAdmin
@@ -65,6 +67,14 @@ class MenuAdmin extends ModelAdmin
                     ]);
             }
         }
+
+        if (Config::inst()->get($this->modelClass, 'allow_sorting')) {
+            $gridFieldName = $this->sanitiseClassName($this->modelClass);
+            $gridField = $form->Fields()->fieldByName($gridFieldName);
+
+            $gridField->getConfig()->addComponent(new GridFieldOrderableRows());
+        }
+
 
         return $form;
     }

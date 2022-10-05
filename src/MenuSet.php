@@ -25,7 +25,8 @@ class MenuSet extends DataObject implements PermissionProvider
 
     private static $db = [
         'Name' => 'Varchar(255)',
-        'Description' => 'Text'
+        'Description' => 'Text',
+        'Sort' => 'Int'
     ];
 
     private static $has_many = [
@@ -40,6 +41,8 @@ class MenuSet extends DataObject implements PermissionProvider
         'Name',
         'Description'
     ];
+
+    private static $default_sort = 'Sort ASC';
 
     /**
      * @return array
