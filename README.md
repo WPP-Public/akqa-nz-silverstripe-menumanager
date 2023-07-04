@@ -12,28 +12,8 @@ Menu Manager is licensed under an [MIT license](http://heyday.mit-license.org/)
 
 ## Installation
 
-### Non-composer
-
-To install drop the silverstripe-menumanager directory into your SilverStripe
-root. You must also install
-[silverstripe-gridfieldextensions](https://github.com/ajshort/silverstripe-gridfieldextensions)
-as it is a dependency for this module.
-
-Once both of these are installed, you can run `dev/build?flush=1`
-
-### Composer
-
-Installing from composer is easy,
-
-Create or edit a `composer.json` file in the root of your SilverStripe project,
-and make sure the following is present.
-
-```json
-{
-    "require": {
-        "heyday/silverstripe-menumanager": "^3.0"
-    }
-}
+```
+composer require heyday/silverstripe-menumanager "^3.0"
 ```
 
 After completing this step, navigate in Terminal or similar to the SilverStripe
