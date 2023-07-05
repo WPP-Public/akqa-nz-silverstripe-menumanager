@@ -21,33 +21,33 @@ use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
  */
 class MenuSet extends DataObject implements PermissionProvider
 {
-    private static $table_name = 'MenuSet';
+    private static string $table_name = 'MenuSet';
 
-    private static $db = [
+    private static array $db = [
         'Name' => 'Varchar(255)',
         'Description' => 'Text',
         'Sort' => 'Int'
     ];
 
-    private static $has_many = [
+    private static array $has_many = [
         'MenuItems' => MenuItem::class,
     ];
 
-    private static $cascade_deletes = [
+    private static array $cascade_deletes = [
         'MenuItems'
     ];
 
-    private static $searchable_fields = [
+    private static array $searchable_fields = [
         'Name',
         'Description'
     ];
 
-    private static $default_sort = 'Sort ASC';
+    private static string $default_sort = 'Sort ASC';
 
     /**
      * @return array
      */
-    public function providePermissions()
+    public function providePermissions(): array
     {
         return [
             'MANAGE_MENU_SETS' => _t(__CLASS__ . '.ManageMenuSets', 'Manage Menu Sets'),
@@ -89,7 +89,7 @@ class MenuSet extends DataObject implements PermissionProvider
      * @param array $context
      * @return boolean
      */
-    public function canCreate($member = null, $context = [])
+    public function canCreate($member = null, $context = []): bool
     {
         if (Permission::check('MANAGE_MENU_SETS')) {
             return true;
@@ -102,7 +102,7 @@ class MenuSet extends DataObject implements PermissionProvider
      * @param mixed $member
      * @return boolean
      */
-    public function canDelete($member = null)
+    public function canDelete($member = null): bool
     {
         $canDelete = parent::canDelete($member);
 
@@ -126,7 +126,7 @@ class MenuSet extends DataObject implements PermissionProvider
      * @param mixed $member
      * @return boolean
      */
-    public function canEdit($member = null)
+    public function canEdit($member = null): bool
     {
         if (Permission::check('MANAGE_MENU_SETS') || Permission::check('MANAGE_MENU_ITEMS')) {
             return true;
@@ -139,7 +139,7 @@ class MenuSet extends DataObject implements PermissionProvider
      * @param mixed $member
      * @return boolean
      */
-    public function canView($member = null)
+    public function canView($member = null): bool
     {
         if (Permission::check('MANAGE_MENU_SETS') || Permission::check('MANAGE_MENU_ITEMS')) {
             return true;
@@ -162,7 +162,7 @@ class MenuSet extends DataObject implements PermissionProvider
      * Check if this menu set appears in the default sets config
      * @return bool
      */
-    public function isDefaultSet()
+    public function isDefaultSet(): bool
     {
         return in_array($this->Name, $this->getDefaultSetNames());
     }
@@ -171,7 +171,7 @@ class MenuSet extends DataObject implements PermissionProvider
     /**
      * Set up default records based on the yaml config
      */
-    public function requireDefaultRecords()
+    public function requireDefaultRecords(): void
     {
         parent::requireDefaultRecords();
 
@@ -194,7 +194,7 @@ class MenuSet extends DataObject implements PermissionProvider
     /**
      * @return FieldList
      */
-    public function getCMSFields()
+    public function getCMSFields(): FieldList
     {
         $fields = FieldList::create(TabSet::create('Root'));
 
@@ -275,7 +275,7 @@ class MenuSet extends DataObject implements PermissionProvider
     /**
      * @return array
      */
-    public function summaryFields()
+    public function summaryFields(): array
     {
         return [
             'Name' => _t(__CLASS__ . '.DB_Name', 'Name'),

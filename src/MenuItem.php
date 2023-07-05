@@ -20,12 +20,12 @@ class MenuItem extends DataObject implements PermissionProvider
     /**
      * @var string
      */
-    private static $table_name = 'MenuItem';
+    private static string $table_name = 'MenuItem';
 
     /**
      * @var array
      */
-    private static $db = [
+    private static array $db = [
         // If you want to customise the MenuTitle use this field - leaving blank will use MenuTitle of associated Page
         'MenuTitle' => 'Varchar(255)',
         // This field is used for external links (picking a page from the dropdown will overwrite this link)
@@ -39,7 +39,7 @@ class MenuItem extends DataObject implements PermissionProvider
     /**
      * @var array
      */
-    private static $has_one = [
+    private static array $has_one = [
         'Page' => SiteTree::class, // page the MenuItem refers to
         'MenuSet' => MenuSet::class, // parent MenuSet
     ];
@@ -47,7 +47,7 @@ class MenuItem extends DataObject implements PermissionProvider
     /**
      * @var array
      */
-    private static $searchable_fields = [
+    private static array $searchable_fields = [
         'MenuTitle',
         'Page.Title'
     ];
@@ -55,7 +55,7 @@ class MenuItem extends DataObject implements PermissionProvider
     /**
      * @return string
      */
-    public function IsNewWindowNice()
+    public function IsNewWindowNice(): string
     {
         return $this->IsNewWindow
             ? _t('SilverStripe\\Forms\\CheckboxField.YESANSWER', 'Yes')
@@ -65,12 +65,12 @@ class MenuItem extends DataObject implements PermissionProvider
     /**
      * @var string
      */
-    private static $default_sort = 'Sort';
+    private static string $default_sort = 'Sort';
 
     /**
      * @return array
      */
-    public function providePermissions()
+    public function providePermissions(): array
     {
         return [
             'MANAGE_MENU_ITEMS' => _t(__CLASS__ . '.ManageMenuItems', 'Manage Menu Items')
@@ -82,7 +82,7 @@ class MenuItem extends DataObject implements PermissionProvider
      * @param array $context
      * @return boolean
      */
-    public function canCreate($member = null, $context = [])
+    public function canCreate($member = null, $context = []): bool
     {
         return Permission::check('MANAGE_MENU_ITEMS');
     }
@@ -91,7 +91,7 @@ class MenuItem extends DataObject implements PermissionProvider
      * @param mixed $member
      * @return boolean
      */
-    public function canDelete($member = null)
+    public function canDelete($member = null): bool
     {
         return Permission::check('MANAGE_MENU_ITEMS');
     }
@@ -100,7 +100,7 @@ class MenuItem extends DataObject implements PermissionProvider
      * @param mixed $member
      * @return boolean
      */
-    public function canEdit($member = null)
+    public function canEdit($member = null): bool
     {
         return Permission::check('MANAGE_MENU_ITEMS');
     }
@@ -109,7 +109,7 @@ class MenuItem extends DataObject implements PermissionProvider
      * @param mixed $member
      * @return boolean
      */
-    public function canView($member = null)
+    public function canView($member = null): bool
     {
         return Permission::check('MANAGE_MENU_ITEMS');
     }
@@ -117,7 +117,7 @@ class MenuItem extends DataObject implements PermissionProvider
     /**
      * @return FieldList
      */
-    public function getCMSFields()
+    public function getCMSFields(): FieldList
     {
         $fields = FieldList::create(TabSet::create('Root'));
 
@@ -206,7 +206,7 @@ class MenuItem extends DataObject implements PermissionProvider
     /**
      * @return mixed
      */
-    public function getTitle()
+    public function getTitle(): string
     {
         return $this->MenuTitle;
     }
