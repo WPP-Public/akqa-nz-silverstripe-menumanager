@@ -18,7 +18,7 @@
         }
     },
     "extra": {
-        "dev-main": "3.3.x-dev"
+        "dev-main": "4.0.x-dev"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
