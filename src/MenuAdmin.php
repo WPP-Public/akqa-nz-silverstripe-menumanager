@@ -4,6 +4,8 @@ namespace Heyday\MenuManager;
 
 use SilverStripe\Admin\ModelAdmin;
 use SilverStripe\Core\Config\Config;
+use SilverStripe\Forms\FieldList;
+use SilverStripe\Forms\Form;
 use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldAddNewButton;
 use SilverStripe\Forms\GridField\GridFieldImportButton;
@@ -17,34 +19,34 @@ class MenuAdmin extends ModelAdmin
     /**
      * @var array
      */
-    private static $managed_models = [
+    private static array $managed_models = [
         MenuSet::class,
     ];
 
     /**
      * @var string
      */
-    private static $url_segment = 'menu-manager';
+    private static string $url_segment = 'menu-manager';
 
     /**
      * @var string
      */
-    private static $menu_title = 'Menus';
+    private static string $menu_title = 'Menus';
 
     /**
      * @var string
      */
-    private static $menu_icon_class = 'font-icon-link';
+    private static string $menu_icon_class = 'font-icon-link';
 
     /**
      * @var array
      */
-    private static $model_importers = [];
+    private static array $model_importers = [];
 
     /**
      * @var bool
      */
-    private static $enable_cms_create = true;
+    private static bool $enable_cms_create = true;
 
     /**
      * Adjust the CMS's ability to create MenuSets

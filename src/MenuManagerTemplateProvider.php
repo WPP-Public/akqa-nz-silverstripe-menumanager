@@ -5,6 +5,8 @@ namespace Heyday\MenuManager;
 use InvalidArgumentException;
 use SilverStripe\Core\Extensible;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\ORM\DataList;
+use SilverStripe\ORM\DataObject;
 use SilverStripe\View\TemplateGlobalProvider;
 
 class MenuManagerTemplateProvider implements TemplateGlobalProvider
@@ -14,7 +16,7 @@ class MenuManagerTemplateProvider implements TemplateGlobalProvider
     /**
      * @return array
      */
-    public static function get_template_global_variables()
+    public static function get_template_global_variables(): array
     {
         return [
             'MenuSet' => 'MenuSet',
@@ -26,29 +28,28 @@ class MenuManagerTemplateProvider implements TemplateGlobalProvider
      * @param $name
      * @return MenuSet|null
      */
-    public static function MenuSet($name)
+    public static function MenuSet($name): ?MenuSet
     {
         return Injector::inst()->get(self::class)->findMenuSetByName($name);
     }
 
     /**
-     * @param $name
      * @return MenuSet|null
      */
-   public static function MenuSets()
-   {
-       return MenuSet::get();
-   }
+    public static function MenuSets(): ?MenuSet
+    {
+        return MenuSet::get();
+    }
 
 
     /**
      * Find a MenuSet by name
      *
      * @param string $name
-     * @return MenuSet|null
+     * @return DataObject|null
      * @throws InvalidArgumentException
      */
-    public function findMenuSetByName($name)
+    public function findMenuSetByName(string $name): ?DataObject
     {
         if (empty($name)) {
             throw new InvalidArgumentException("Please pass in the name of the MenuSet you're trying to find");
