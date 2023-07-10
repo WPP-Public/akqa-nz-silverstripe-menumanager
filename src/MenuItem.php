@@ -26,13 +26,9 @@ class MenuItem extends DataObject implements PermissionProvider
      * @var array
      */
     private static $db = [
-        // If you want to customise the MenuTitle use this field - leaving blank will use MenuTitle of associated Page
         'MenuTitle' => 'Varchar(255)',
-        // This field is used for external links (picking a page from the dropdown will overwrite this link)
         'Link' => 'Text',
-        // Sort order
         'Sort' => 'Int',
-        // Can be used as a check for adding target="_blank"
         'IsNewWindow' => 'Boolean'
     ];
 
@@ -84,7 +80,13 @@ class MenuItem extends DataObject implements PermissionProvider
      */
     public function canCreate($member = null, $context = [])
     {
-        return Permission::check('MANAGE_MENU_ITEMS');
+        $extended = $this->extendedCan(__FUNCTION__, $member);
+
+        if ($extended !== null) {
+            return $extended;
+        }
+
+        return Permission::checkMember($member, 'MANAGE_MENU_ITEMS');
     }
 
     /**
@@ -93,6 +95,12 @@ class MenuItem extends DataObject implements PermissionProvider
      */
     public function canDelete($member = null)
     {
+        $extended = $this->extendedCan(__FUNCTION__, $member);
+
+        if ($extended !== null) {
+            return $extended;
+        }
+
         return Permission::check('MANAGE_MENU_ITEMS');
     }
 
@@ -102,6 +110,12 @@ class MenuItem extends DataObject implements PermissionProvider
      */
     public function canEdit($member = null)
     {
+        $extended = $this->extendedCan(__FUNCTION__, $member);
+
+        if ($extended !== null) {
+            return $extended;
+        }
+
         return Permission::check('MANAGE_MENU_ITEMS');
     }
 
@@ -111,6 +125,12 @@ class MenuItem extends DataObject implements PermissionProvider
      */
     public function canView($member = null)
     {
+        $extended = $this->extendedCan(__FUNCTION__, $member);
+
+        if ($extended !== null) {
+            return $extended;
+        }
+
         return Permission::check('MANAGE_MENU_ITEMS');
     }
 
