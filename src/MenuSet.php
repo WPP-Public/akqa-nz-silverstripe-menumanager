@@ -91,11 +91,12 @@ class MenuSet extends DataObject implements PermissionProvider
      */
     public function canCreate($member = null, $context = [])
     {
-        if (Permission::check('MANAGE_MENU_SETS')) {
-            return true;
+        $extended = $this->extendedCan(__FUNCTION__, $member);
+        if ($extended !== null) {
+            return $extended;
         }
 
-        return parent::canCreate($member, $context);
+        return Permission::check('MANAGE_MENU_SETS');
     }
 
     /**
@@ -104,19 +105,17 @@ class MenuSet extends DataObject implements PermissionProvider
      */
     public function canDelete($member = null)
     {
-        $canDelete = parent::canDelete($member);
-
         // Backwards compatibility for duplicate default sets
         $existing = MenuManagerTemplateProvider::MenuSet($this->Name);
         $isDuplicate = $existing && $existing->ID !== $this->ID;
 
         if ($this->isDefaultSet() && !$isDuplicate) {
-            // Default menu's cannot be deleted
-            $canDelete = false;
+            return false;
         }
 
-        if ($canDelete !== null) {
-            return $canDelete;
+        $extended = $this->extendedCan(__FUNCTION__, $member);
+        if ($extended !== null) {
+            return $extended;
         }
 
         return Permission::check('MANAGE_MENU_SETS');
@@ -128,11 +127,12 @@ class MenuSet extends DataObject implements PermissionProvider
      */
     public function canEdit($member = null)
     {
-        if (Permission::check('MANAGE_MENU_SETS') || Permission::check('MANAGE_MENU_ITEMS')) {
-            return true;
+        $extended = $this->extendedCan(__FUNCTION__, $member);
+        if ($extended !== null) {
+            return $extended;
         }
 
-        return parent::canEdit($member);
+        return (Permission::check('MANAGE_MENU_SETS') || Permission::check('MANAGE_MENU_ITEMS'));
     }
 
     /**
@@ -141,11 +141,13 @@ class MenuSet extends DataObject implements PermissionProvider
      */
     public function canView($member = null)
     {
-        if (Permission::check('MANAGE_MENU_SETS') || Permission::check('MANAGE_MENU_ITEMS')) {
-            return true;
+        $extended = $this->extendedCan(__FUNCTION__, $member);
+        if ($extended !== null) {
+            return $extended;
         }
 
-        return parent::canView($member);
+
+        return (Permission::check('MANAGE_MENU_SETS') || Permission::check('MANAGE_MENU_ITEMS'));
     }
 
 
