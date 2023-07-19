@@ -5,7 +5,6 @@
     "license": "MIT",
     "require": {
         "silverstripe/framework": "^5",
-        "silverstripe/vendor-plugin": "^2.0",
         "silverstripe/admin": "^2.0.0-beta1",
         "symbiote/silverstripe-gridfieldextensions": "^4.0.0-beta1"
     },
