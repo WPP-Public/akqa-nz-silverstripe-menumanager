@@ -4,6 +4,7 @@ namespace Heyday\MenuManager;
 
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\GridField\GridField;
+use SilverStripe\Forms\GridField\GridFieldAddExistingAutocompleter;
 use SilverStripe\Forms\GridField\GridFieldConfig_RelationEditor;
 use SilverStripe\Forms\TabSet;
 use SilverStripe\Forms\TextareaField;
@@ -34,6 +35,10 @@ class MenuSet extends DataObject implements PermissionProvider
     ];
 
     private static array $cascade_deletes = [
+        'MenuItems'
+    ];
+
+    private static array $cascade_duplicates = [
         'MenuItems'
     ];
 
@@ -70,7 +75,6 @@ class MenuSet extends DataObject implements PermissionProvider
          * Use an index for the Name field instead https://docs.silverstripe.org/en/4/developer_guides/model/indexes/
          */
         if ($existing && $existing->ID !== $this->ID) {
-            // MenuSets must have a unique Name
             $result->addError(
                 _t(
                     __CLASS__ . 'AlreadyExists',
@@ -177,19 +181,34 @@ class MenuSet extends DataObject implements PermissionProvider
     {
         parent::requireDefaultRecords();
 
-        foreach ($this->getDefaultSetNames() as $name) {
-            $existingRecord = MenuSet::get()
-                ->filter('Name', $name)
-                ->first();
-
-            if (!$existingRecord) {
-                $set = MenuSet::create();
-                $set->Name = $name;
-                $set->write();
-
-                DB::alteration_message("MenuSet '$name' created", 'created');
-            }
+        if ($this->createDefaultMenuSets()) {
+            DB::alteration_message(sprintf(
+                "MenuSets created (%s)",
+                implode(', ', $this->getDefaultSetNames())
+            ), 'created');
         }
+    }
+
+
+    public function createDefaultMenuSets()
+    {
+        if ($this->getDefaultSetNames()) {
+            foreach ($this->getDefaultSetNames() as $name) {
+                $existingRecord = MenuSet::get()
+                    ->filter('Name', $name)
+                    ->first();
+
+                if (!$existingRecord) {
+                    $set = MenuSet::create();
+                    $set->Name = $name;
+                    $set->write();
+                }
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
 
@@ -214,7 +233,7 @@ class MenuSet extends DataObject implements PermissionProvider
             );
 
             $config->addComponent(new GridFieldOrderableRows('Sort'));
-
+            $config->removeComponentsByType(GridFieldAddExistingAutocompleter::class);
             $fields->addFieldToTab(
                 'Root.Meta',
                 TextareaField::create('Description', _t(__CLASS__ . '.DB_Description', 'Description'))
@@ -268,7 +287,7 @@ class MenuSet extends DataObject implements PermissionProvider
      *
      * @return string[]
      */
-    protected function getDefaultSetNames()
+    public function getDefaultSetNames()
     {
         return $this->config()->get('default_sets') ?: [];
     }

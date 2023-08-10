@@ -4,8 +4,6 @@ namespace Heyday\MenuManager;
 
 use SilverStripe\Admin\ModelAdmin;
 use SilverStripe\Core\Config\Config;
-use SilverStripe\Forms\FieldList;
-use SilverStripe\Forms\Form;
 use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldAddNewButton;
 use SilverStripe\Forms\GridField\GridFieldImportButton;
@@ -79,5 +77,21 @@ class MenuAdmin extends ModelAdmin
 
 
         return $form;
+    }
+
+
+    public function getList()
+    {
+        $list = parent::getList();
+
+        if ($this->modelClass === MenuSet::class) {
+            if (class_exists('\SilverStripe\Subsites\State\SubsiteState')) {
+                $list = $list->filter([
+                    'SubsiteID' => \SilverStripe\Subsites\State\SubsiteState::singleton()->getSubsiteId()
+                ]);
+            }
+        }
+
+        return $list;
     }
 }

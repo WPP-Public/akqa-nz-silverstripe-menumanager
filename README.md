@@ -38,11 +38,10 @@ be deleted through the CMS.
 
 ```yaml
 Heyday\MenuManager\MenuSet:
-  default_sets:
-    - Main
-    - Footer
+    default_sets:
+        - Main
+        - Footer
 ```
-
 
 ### Creating MenuItems
 
@@ -73,7 +72,7 @@ Page as well the link will be overwritten by the Page you chose.
 
 #### IsNewWindow
 
-Can be used as a check to see if 'target="_blank"' should be added to links.
+Can be used as a check to see if 'target="\_blank"' should be added to links.
 
 ### Disable creating Menu Sets in the CMS
 
@@ -82,7 +81,7 @@ disable the ability to create new Menu Sets in the CMS:
 
 ```yml
 Heyday\MenuManager\MenuAdmin:
-  enable_cms_create: false
+    enable_cms_create: false
 ```
 
 _Note: Non-default Menu Sets can still be deleted, to help tidy unwanted CMS
@@ -91,28 +90,28 @@ content._
 ### Usage in template
 
 ```html
-	<% loop $MenuSet('YourMenuName').MenuItems %>
-        <a href="{$Link}" class="{$LinkingMode}">{$MenuTitle}</a>
-    <% end_loop %>
+<% loop $MenuSet('YourMenuName').MenuItems %>
+<a href="{$Link}" class="{$LinkingMode}">{$MenuTitle}</a>
+<% end_loop %>
 ```
 
-To loop through *all* MenuSets and their items:
+To loop through _all_ MenuSets and their items:
 
-	<% loop $MenuSets %>
-		<% loop $MenuItems %>
-			<a href="$Link" class="$LinkingMode">$MenuTitle</a>
-		<% end_loop %>
-	<% end_loop %>
+    <% loop $MenuSets %>
+    	<% loop $MenuItems %>
+    		<a href="$Link" class="$LinkingMode">$MenuTitle</a>
+    	<% end_loop %>
+    <% end_loop %>
 
 Optionally you can also limit the number of MenuSets and MenuItems that are looped through.
 
 The example below will fetch the top 4 MenuSets (as seen in Menu Management), and the top 5 MenuItems for each:
 
-	<% loop $MenuSets.Limit(4) %>
-		<% loop $MenuItems.Limit(5) %>
-			<a href="$Link" class="$LinkingMode">$MenuTitle</a>
-		<% end_loop %>
-	<% end_loop %>
+    <% loop $MenuSets.Limit(4) %>
+    	<% loop $MenuItems.Limit(5) %>
+    		<a href="$Link" class="$LinkingMode">$MenuTitle</a>
+    	<% end_loop %>
+    <% end_loop %>
 
 #### Enabling partial caching
 
@@ -120,17 +119,15 @@ The example below will fetch the top 4 MenuSets (as seen in Menu Management), an
 can be enabled with your menu to speed up rendering of your templates.
 
 ```html
-	<% with $MenuSet('YourMenuName') %>
-    <% cached 'YourMenuNameCacheKey', $LastEdited, $MenuItems.max('LastEdited'), $MenuItems.count %>
-    <% if $MenuItems %>
-    <nav>
-        <% loop $MenuItems %>
-            <a href="{$Link}" class="{$LinkingMode}"> $MenuTitle.XML </a>
-        <% end_loop %>
-    </nav>
-    <% end_if %>
-    <% end_cached %>
-    <% end_with %>
+<% with $MenuSet('YourMenuName') %> <% cached 'YourMenuNameCacheKey',
+$LastEdited, $MenuItems.max('LastEdited'), $MenuItems.count %> <% if $MenuItems
+%>
+<nav>
+    <% loop $MenuItems %>
+    <a href="{$Link}" class="{$LinkingMode}"> $MenuTitle.XML </a>
+    <% end_loop %>
+</nav>
+<% end_if %> <% end_cached %> <% end_with %>
 ```
 
 ### Allow sorting of MenuSets
@@ -139,16 +136,29 @@ By default menu sets cannot be sorted, however, you can set your configuration t
 
 ```yaml
 Heyday\MenuManager\MenuSet:
-  allow_sorting: true
+    allow_sorting: true
 ```
 
+## Subsite Support
 
-### Code guidelines
+If you're using SilverStripe Subsites, you can make MenuManager subsite aware
+via applying an extension to the MenuSet.
+
+_app/\_config/menus.yml_
+
+```
+Heyday\MenuManager\MenuSet:
+  create_menu_sets_per_subsite: true
+  extensions:
+    - Heyday\MenuManager\Extensions\MenuSubsiteExtension
+Heyday\MenuManager\MenuItem:
+  extensions:
+    - Heyday\MenuManager\Extensions\MenuSubsiteExtension
+```
+
+## Code guidelines
 
 This project follows the standards defined in:
 
-* [PSR-1](http://www.php-fig.org/psr/psr-1/)
-* [PSR-2](http://www.php-fig.org/psr/psr-2/)
-
-
-
+-   [PSR-1](http://www.php-fig.org/psr/psr-1/)
+-   [PSR-2](http://www.php-fig.org/psr/psr-2/)

@@ -1,0 +1,13 @@
+---
+Name: menu-manager#extensions
+Only:
+  classexists: '\SilverStripe\Subsites\Model\Subsite'
+---
+SilverStripe\Subsites\Model\Subsite:
+  has_many:
+    - MenuSets => 'Heyday\MenuManager\MenuSet'
+  cascade_deletes:
+    - MenuSets
+Heyday\MenuManager\MenuAdmin:
+  extensions:
+    - SilverStripe\Subsites\Extensions\SubsiteMenuExtension

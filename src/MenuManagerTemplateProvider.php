@@ -36,7 +36,7 @@ class MenuManagerTemplateProvider implements TemplateGlobalProvider
     /**
      * @return MenuSet|null
      */
-    public static function MenuSets(): ?MenuSet
+    public static function MenuSets(): ?DataList
     {
         return MenuSet::get();
     }
@@ -54,8 +54,18 @@ class MenuManagerTemplateProvider implements TemplateGlobalProvider
         if (empty($name)) {
             throw new InvalidArgumentException("Please pass in the name of the MenuSet you're trying to find");
         }
+
         $result = MenuSet::get()->filter('Name', $name);
+
+        if ($result->exists() && $result->first()->hasExtension('Heyday\MenuManager\Extensions\MenuSubsiteExtension')) {
+            $result = $result->where(sprintf(
+                'SubsiteID = %s',
+                \SilverStripe\Subsites\State\SubsiteState::singleton()->getSubsiteId()
+            ));
+        }
+
         $this->extend('updateFindMenuSetByName', $result);
+
         return $result->first();
     }
 }
