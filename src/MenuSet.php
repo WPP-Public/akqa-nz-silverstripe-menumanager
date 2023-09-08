@@ -6,6 +6,7 @@ use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldAddExistingAutocompleter;
 use SilverStripe\Forms\GridField\GridFieldConfig_RelationEditor;
+use SilverStripe\Forms\GridField\GridFieldDeleteAction;
 use SilverStripe\Forms\TabSet;
 use SilverStripe\Forms\TextareaField;
 use SilverStripe\Forms\TextField;
@@ -218,19 +219,24 @@ class MenuSet extends DataObject implements PermissionProvider
     public function getCMSFields(): FieldList
     {
         $fields = FieldList::create(TabSet::create('Root'));
-
         if ($this->ID != null) {
             $fields->removeByName('Name');
-
+            $config = GridFieldConfig_RelationEditor::create();
             $fields->addFieldToTab(
                 'Root.Main',
                 new GridField(
                     'MenuItems',
                     '',
                     $this->MenuItems(),
-                    $config = GridFieldConfig_RelationEditor::create()
+                    $config
                 )
             );
+
+            $remove = $config->getComponentByType(GridFieldDeleteAction::class);
+
+            if ($remove) {
+                $remove->setRemoveRelation(false);
+            }
 
             $config->addComponent(new GridFieldOrderableRows('Sort'));
             $config->removeComponentsByType(GridFieldAddExistingAutocompleter::class);
