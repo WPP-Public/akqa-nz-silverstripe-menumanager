@@ -6,7 +6,6 @@ use Heyday\MenuManager\MenuSet;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\HiddenField;
 use SilverStripe\ORM\DataExtension;
-use SilverStripe\Subsites\State\SubsiteState;
 
 if (!class_exists('\SilverStripe\Subsites\Model\Subsite') || !class_exists('\SilverStripe\Subsites\State\SubsiteState')) {
     return;
