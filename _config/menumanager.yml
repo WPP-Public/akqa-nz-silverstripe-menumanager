@@ -1,0 +1,6 @@
+---
+Name: menumanager
+---
+SilverStripe\Admin\LeftAndMain:
+  extra_requirements_javascript:
+    - 'heyday/silverstripe-menumanager:client/menu-manager.js'

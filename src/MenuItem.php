@@ -2,9 +2,12 @@
 
 namespace Heyday\MenuManager;
 
+use SilverStripe\AssetAdmin\Forms\UploadField;
+use SilverStripe\Assets\File;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Forms\CheckboxField;
 use SilverStripe\Forms\FieldList;
+use SilverStripe\Forms\OptionsetField;
 use SilverStripe\Forms\TabSet;
 use SilverStripe\Forms\TextField;
 use SilverStripe\Forms\TreeDropdownField;
@@ -26,7 +29,8 @@ class MenuItem extends DataObject implements PermissionProvider
         'MenuTitle' => 'Varchar(255)',
         'Link' => 'Text',
         'Sort' => 'Int',
-        'IsNewWindow' => 'Boolean'
+        'IsNewWindow' => 'Boolean',
+        'Anchor' => 'Varchar(255)',
     ];
 
     /**
@@ -34,7 +38,8 @@ class MenuItem extends DataObject implements PermissionProvider
      */
     private static array $has_one = [
         'Page' => SiteTree::class, // page the MenuItem refers to
-        'MenuSet' => MenuSet::class, // parent MenuSet
+        'MenuSet' => MenuSet::class,
+        'File' => File::class,
     ];
 
     /**
@@ -136,11 +141,12 @@ class MenuItem extends DataObject implements PermissionProvider
      */
     public function getCMSFields(): FieldList
     {
-        $fields = FieldList::create(TabSet::create('Root'));
+        $fields = FieldList::create(TabSet::create('Root')->addExtraClass('menu-manager-tabset'));
 
         $fields->addFieldsToTab(
-            'Root.main',
+            'Root.Main',
             [
+                OptionsetField::create("LinkType", "", $this->getLinkTypes(), $this->getLinkType()),
                 TextField::create(
                     'MenuTitle',
                     _t(__CLASS__ . '.DB_MenuTitle', 'Link Label')
@@ -161,7 +167,6 @@ class MenuItem extends DataObject implements PermissionProvider
                         'Leave blank if you wish to manually specify the URL below.'
                     )
                 ),
-
                 TextField::create(
                     'Link',
                     _t(__CLASS__ . '.DB_Link', 'URL')
@@ -171,11 +176,15 @@ class MenuItem extends DataObject implements PermissionProvider
                         'Enter a full URL to link to another website.'
                     )
                 ),
-
+                TextField::create('Anchor', _t(__CLASS__ . '.DB_Anchor', 'Anchor')),
                 CheckboxField::create(
                     'IsNewWindow',
                     _t(__CLASS__ . '.DB_IsNewWindow', 'Open in a new window?')
                 ),
+                UploadField::create(
+                    'File',
+                    _t(__CLASS__ . '.DB_File', 'File')
+                )->setFolderName('Uploads/menu-items'),
             ]
         );
 
@@ -228,6 +237,7 @@ class MenuItem extends DataObject implements PermissionProvider
         return $this->MenuTitle;
     }
 
+
     /**
      * Checks to see if a page has been chosen and if so sets Link to null
      * This means that used in conjunction with the __get method above
@@ -241,7 +251,29 @@ class MenuItem extends DataObject implements PermissionProvider
         if ($this->PageID != 0) {
             $this->Link = null;
         }
+
+        if ($this->Anchor) {
+            // strip out any leading #s
+            $this->Anchor = preg_replace('/^#/', '', $this->Anchor);
+        }
     }
+
+
+    public function getLinkType(): string
+    {
+        if ($this->FileID && $this->FileID > 0) {
+            $type = 'file';
+        } elseif ($this->PageID && $this->PageID > 0 || !$this->Link || $this->Link == '/') {
+            $type = 'internal';
+        } else {
+            $type = 'external';
+        }
+
+        $this->invokeWithExtensions('updateLinkType', $type);
+
+        return $type;
+    }
+
 
     public function summaryFields()
     {
@@ -251,5 +283,19 @@ class MenuItem extends DataObject implements PermissionProvider
             'Link' => _t(__CLASS__ . '.DB_Link', 'Link'),
             'IsNewWindowNice' => _t(__CLASS__ . '.NewTab', 'Opens in a new tab?'),
         ];
+    }
+
+
+    public function getLinkTypes(): array
+    {
+        $types = [
+            'internal' => _t(__CLASS__ .'.INTERNAL', 'Link to an internal page'),
+            'external' => _t(__CLASS__ .'.EXTERNAL', 'Link to an external page, email or phone number'),
+            'file' => _t(__CLASS__ .'.FILE', 'Link to a file'),
+        ];
+
+        $this->invokeWithExtensions('updateLinkTypes', $types);
+
+        return $types;
     }
 }
