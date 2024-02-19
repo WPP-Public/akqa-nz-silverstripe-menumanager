@@ -298,4 +298,14 @@ class MenuItem extends DataObject implements PermissionProvider
 
         return $types;
     }
+
+
+    public function getLinkingMode()
+    {
+        if ($this->PageID) {
+            return $this->Page()->LinkingMode();
+        } else {
+            return 'link';
+        }
+    }
 }
