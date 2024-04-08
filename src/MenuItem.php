@@ -232,7 +232,7 @@ class MenuItem extends DataObject implements PermissionProvider
     /**
      * @return mixed
      */
-    public function getTitle(): string
+    public function getTitle(): ?string
     {
         return $this->MenuTitle;
     }
