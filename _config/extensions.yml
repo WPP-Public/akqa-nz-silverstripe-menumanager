@@ -9,3 +9,6 @@ SilverStripe\Subsites\Model\Subsite:
 Heyday\MenuManager\MenuAdmin:
   extensions:
     - SilverStripe\Subsites\Extensions\SubsiteMenuExtension
+Heyday\MenuManager\MenuSet:
+  extensions:
+    - Heyday\MenuManager\Extensions\MenuSubsiteExtension
