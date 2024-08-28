@@ -16,6 +16,7 @@ use SilverStripe\ORM\DB;
 use SilverStripe\ORM\ValidationResult;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
+use SilverStripe\Subsites\Model\Subsite;
 use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
 
 /**
@@ -29,6 +30,10 @@ class MenuSet extends DataObject implements PermissionProvider
         'Name' => 'Varchar(255)',
         'Description' => 'Text',
         'Sort' => 'Int'
+    ];
+
+    private static array $has_one = [
+        'Subsite' => Subsite::class
     ];
 
     private static array $has_many = [
