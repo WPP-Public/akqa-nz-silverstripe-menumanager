@@ -3,9 +3,6 @@
 The menu management module is for creating custom menu structures when the site
 tree hierarchy just won't do.
 
-The latest version only supports SilverStripe 4, see the 2.0 branch for a
-SilverStripe 3.x compatible version.
-
 ## License
 
 Menu Manager is licensed under an [MIT license](http://heyday.mit-license.org/)
@@ -13,7 +10,7 @@ Menu Manager is licensed under an [MIT license](http://heyday.mit-license.org/)
 ## Installation
 
 ```
-composer require heyday/silverstripe-menumanager "^3.0"
+composer require heyday/silverstripe-menumanager
 ```
 
 After completing this step, navigate in Terminal or similar to the SilverStripe
