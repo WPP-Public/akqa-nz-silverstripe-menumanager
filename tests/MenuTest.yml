@@ -1,0 +1,36 @@
+Page:
+  home:
+    Title: 'Home'
+    URLSegment: 'home'
+
+Heyday\MenuManager\MenuSet:
+  header:
+    Name: Header
+  footer:
+    Name: Footer 1
+
+Heyday\MenuManager\MenuItem:
+  header-1:
+    MenuTitle: Header 1
+    Page: =>Page.home
+    MenuSet: =>Heyday\MenuManager\MenuSet.header
+  header-2:
+    MenuTitle: Header 2
+    Link: '#'
+    MenuSet: =>Heyday\MenuManager\MenuSet.header
+  header-3:
+    MenuTitle: Header 3
+    Link: '#'
+    MenuSet: =>Heyday\MenuManager\MenuSet.header
+  footer-item-1:
+    MenuTitle: Footer 1
+    Link: '#'
+    MenuSet: =>Heyday\MenuManager\MenuSet.footer
+  footer-item-2:
+    MenuTitle: Footer 2
+    Link: '#'
+    MenuSet: =>Heyday\MenuManager\MenuSet.footer
+  footer-item-3:
+    MenuTitle: Footer 3
+    Link: '#'
+    MenuSet: =>Heyday\MenuManager\MenuSet.footer

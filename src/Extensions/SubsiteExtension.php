@@ -4,14 +4,14 @@ namespace Heyday\MenuManager\Extensions;
 
 use Heyday\MenuManager\MenuSet;
 use SilverStripe\Forms\FieldList;
-use SilverStripe\Forms\HiddenField;
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Core\Extension;
 
-if (!class_exists('\SilverStripe\Subsites\Model\Subsite') || !class_exists('\SilverStripe\Subsites\State\SubsiteState')) {
+if (!class_exists('\SilverStripe\Subsites\Model\Subsite') ||
+    !class_exists('\SilverStripe\Subsites\State\SubsiteState')) {
     return;
 }
 
-class SubsiteExtension extends DataExtension
+class SubsiteExtension extends Extension
 {
     private static $has_many = [
         'MenuSets' => MenuSet::class
