@@ -4,15 +4,18 @@
     "description": "Allows complex menu management to be handled through the CMS when a simple tree structure is not enough.",
     "license": "MIT",
     "require": {
-        "silverstripe/cms": "^5",
-        "symbiote/silverstripe-gridfieldextensions": "^4.0"
+        "silverstripe/cms": "^6",
+        "symbiote/silverstripe-gridfieldextensions": "^5",
+        "silverstripe/asset-admin": "^3"
     },
     "require-dev": {
+        "phpunit/phpunit": "^11.5",
         "squizlabs/php_codesniffer": "^3.7.2"
     },
     "autoload": {
         "psr-4": {
-            "Heyday\\MenuManager\\": "src/"
+            "Heyday\\MenuManager\\": "src/",
+            "Heyday\\MenuManager\\Test\\": "tests/"
         }
     },
     "extra": {
@@ -28,5 +31,11 @@
             "composer/installers": true,
             "silverstripe/vendor-plugin": true
         }
+    },
+    "scripts": {
+        "test": "phpunit -d memory_limit=512M -d flush=1",
+        "test-with-coverage": [
+            "phpunit --coverage-html coverage/php --coverage-clover coverage/php/clover.xml"
+        ]
     }
 }

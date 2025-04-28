@@ -210,7 +210,7 @@ class MenuItem extends DataObject implements PermissionProvider
      * @param string $field
      * @return mixed
      */
-    public function __get($field)
+    public function __get(string $field): mixed
     {
         $default = parent::__get($field);
 
