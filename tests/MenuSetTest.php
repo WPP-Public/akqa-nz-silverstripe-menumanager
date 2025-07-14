@@ -46,5 +46,4 @@ class MenuSetTest extends SapphireTest
             MenuSet::create()->getCMSFields()->dataFieldByName('Name')
         );
     }
-
 }

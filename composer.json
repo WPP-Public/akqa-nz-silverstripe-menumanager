@@ -34,6 +34,8 @@
     },
     "scripts": {
         "test": "phpunit -d memory_limit=512M -d flush=1",
+        "lint": "phpcs src tests",
+        "lint:fix": "phpcbf src tests",
         "test-with-coverage": [
             "phpunit --coverage-html coverage/php --coverage-clover coverage/php/clover.xml"
         ]

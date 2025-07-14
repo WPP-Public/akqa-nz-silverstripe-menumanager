@@ -9,7 +9,7 @@ Menu Manager is licensed under an [MIT license](http://heyday.mit-license.org/)
 
 ## Installation
 
-```
+```sh
 composer require heyday/silverstripe-menumanager
 ```
 

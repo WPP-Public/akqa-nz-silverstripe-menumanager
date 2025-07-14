@@ -44,5 +44,4 @@ class MenuItemTest extends SapphireTest
         $this->assertInstanceOf(CheckboxField::class, $fields->dataFieldByName('IsNewWindow'));
         $this->assertInstanceOf(UploadField::class, $fields->dataFieldByName('File'));
     }
-
 }

@@ -27,5 +27,4 @@ class MenuAdminTest extends SapphireTest
         $form = $admin->getEditForm()->Fields();
         $this->assertInstanceOf(GridField::class, $form->dataFieldByName($menuSetName));
     }
-
 }
