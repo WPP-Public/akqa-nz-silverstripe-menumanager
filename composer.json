@@ -19,7 +19,7 @@
         }
     },
     "extra": {
-        "dev-main": "4.0.x-dev",
+        "dev-main": "5.0.x-dev",
         "expose": [
             "client/"
         ]
