@@ -1,5 +1,7 @@
 <?php
 
+// phpcs:disable PSR1.Methods.CamelCapsMethodName
+
 namespace Heyday\MenuManager;
 
 use InvalidArgumentException;
@@ -19,8 +21,8 @@ class MenuManagerTemplateProvider implements TemplateGlobalProvider
     public static function get_template_global_variables(): array
     {
         return [
-            'MenuSet' => 'MenuSet',
-            'MenuSets' => 'MenuSets'
+            'MenuSet' => 'getMenuSet',
+            'MenuSets' => 'getMenuSets'
         ];
     }
 
@@ -28,7 +30,7 @@ class MenuManagerTemplateProvider implements TemplateGlobalProvider
      * @param $name
      * @return MenuSet|null
      */
-    public static function MenuSet($name): ?MenuSet
+    public static function getMenuSet($name): ?MenuSet
     {
         return Injector::inst()->get(self::class)->findMenuSetByName($name);
     }
@@ -36,7 +38,7 @@ class MenuManagerTemplateProvider implements TemplateGlobalProvider
     /**
      * @return MenuSet|null
      */
-    public static function MenuSets(): ?DataList
+    public static function getMenuSets(): ?DataList
     {
         return MenuSet::get();
     }

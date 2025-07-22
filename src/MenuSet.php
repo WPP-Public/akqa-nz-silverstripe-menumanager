@@ -14,6 +14,7 @@ use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
 use SilverStripe\Core\Validation\ValidationResult;
+use SilverStripe\ORM\HasManyList;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
 use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
@@ -157,9 +158,9 @@ class MenuSet extends DataObject implements PermissionProvider
 
 
     /**
-     * @return mixed
+     * @return HasManyList<MenuItem>
      */
-    public function Children()
+    public function getChildren(): HasManyList
     {
         return $this->MenuItems();
     }
@@ -308,6 +309,18 @@ class MenuSet extends DataObject implements PermissionProvider
             'Name' => _t(__CLASS__ . '.DB_Name', 'Name'),
             'Description' => _t(__CLASS__ . '.DB_Description', 'Description'),
             'MenuItems.Count' => _t(__CLASS__ . '.DB_Items', 'Items')
+        ];
+    }
+
+
+    public function asArray(): array
+    {
+        return [
+            'name' => $this->Name,
+            'description' => $this->Description,
+            'items' => $this->MenuItems()->map(function (MenuItem $item) {
+                return $item->asArray();
+            })->toArray(),
         ];
     }
 }

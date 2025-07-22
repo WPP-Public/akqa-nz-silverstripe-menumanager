@@ -3,10 +3,6 @@
 The menu management module is for creating custom menu structures when the site
 tree hierarchy just won't do.
 
-## License
-
-Menu Manager is licensed under an [MIT license](http://heyday.mit-license.org/)
-
 ## Installation
 
 ```sh
@@ -26,8 +22,8 @@ There are 2 main steps to creating a menu using menu management.
 
 ### Creating a MenuSet
 
-This is pretty straight forward. You just give the MenuSet a Name (which is what
-you reference in the templates when controlling the menu).
+Login to the CMS and open the `Menus` admin, give the MenuSet a Name (which is
+what you reference in the templates when controlling the menu).
 
 As it is common to reference MenuSets by name in templates, you can configure
 sets to be created automatically during the /dev/build task. These sets cannot
@@ -42,7 +38,7 @@ Heyday\MenuManager\MenuSet:
 
 ### Creating MenuItems
 
-Once you have saved your MenuSet you can add MenuItems.
+Once you have saved your `MenuSet` you can add `MenuItems`.
 
 MenuItems have 4 important fields:
 
@@ -88,27 +84,29 @@ content._
 
 ```html
 <% loop $MenuSet('YourMenuName').MenuItems %>
-<a href="{$Link}" class="{$LinkingMode}">{$MenuTitle}</a>
+<a href="{$URL}" class="{$LinkingMode}">{$MenuTitle}</a>
 <% end_loop %>
 ```
 
 To loop through _all_ MenuSets and their items:
 
-    <% loop $MenuSets %>
-    	<% loop $MenuItems %>
-    		<a href="$Link" class="$LinkingMode">$MenuTitle</a>
-    	<% end_loop %>
-    <% end_loop %>
+```html
+<% loop $MenuSets %> <% loop $MenuItems %>
+<a href="{$URL}" class="{$LinkingMode}">{$MenuTitle}   </a>
+<% end_loop %> <% end_loop %>
+```
 
-Optionally you can also limit the number of MenuSets and MenuItems that are looped through.
+Optionally you can also limit the number of MenuSets and MenuItems that are
+looped through.
 
-The example below will fetch the top 4 MenuSets (as seen in Menu Management), and the top 5 MenuItems for each:
+The example below will fetch the top 4 MenuSets (as seen in Menu Management),
+and the top 5 MenuItems for each:
 
-    <% loop $MenuSets.Limit(4) %>
-    	<% loop $MenuItems.Limit(5) %>
-    		<a href="$Link" class="$LinkingMode">$MenuTitle</a>
-    	<% end_loop %>
-    <% end_loop %>
+```html
+<% loop $MenuSets.Limit(4) %> <% loop $MenuItems.Limit(5) %>
+<a href="{$URL}" class="{$LinkingMode}">{$MenuTitle}</a>
+<% end_loop %> <% end_loop %>
+```
 
 #### Enabling partial caching
 
@@ -116,15 +114,17 @@ The example below will fetch the top 4 MenuSets (as seen in Menu Management), an
 can be enabled with your menu to speed up rendering of your templates.
 
 ```html
-<% with $MenuSet('YourMenuName') %> <% cached 'YourMenuNameCacheKey',
-$LastEdited, $MenuItems.max('LastEdited'), $MenuItems.count %> <% if $MenuItems
-%>
+<% with $MenuSet('YourMenuName') %>
+<% cached 'YourMenuNameCacheKey', $LastEdited, $MenuItems.max('LastEdited'), $MenuItems.count %>
+<% if $MenuItems %>
 <nav>
     <% loop $MenuItems %>
-    <a href="{$Link}" class="{$LinkingMode}"> $MenuTitle.XML </a>
+    <a href="{$URL}" class="{$LinkingMode}"> $MenuTitle.XML </a>
     <% end_loop %>
 </nav>
-<% end_if %> <% end_cached %> <% end_with %>
+<% end_if %>
+<% end_cached %>
+<% end_with %>
 ```
 
 ### Allow sorting of MenuSets
@@ -143,19 +143,16 @@ via applying an extension to the MenuSet.
 
 _app/\_config/menus.yml_
 
-```
+```yaml
 Heyday\MenuManager\MenuSet:
-  create_menu_sets_per_subsite: true
-  extensions:
-    - Heyday\MenuManager\Extensions\MenuSubsiteExtension
+    create_menu_sets_per_subsite: true
+    extensions:
+        - Heyday\MenuManager\Extensions\MenuSubsiteExtension
 Heyday\MenuManager\MenuItem:
-  extensions:
-    - Heyday\MenuManager\Extensions\MenuSubsiteExtension
+    extensions:
+        - Heyday\MenuManager\Extensions\MenuSubsiteExtension
 ```
 
-## Code guidelines
+## License
 
-This project follows the standards defined in:
-
--   [PSR-1](http://www.php-fig.org/psr/psr-1/)
--   [PSR-2](http://www.php-fig.org/psr/psr-2/)
+Menu Manager is licensed under an [MIT license](http://heyday.mit-license.org/)

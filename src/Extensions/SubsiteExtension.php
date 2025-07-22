@@ -1,13 +1,18 @@
 <?php
 
+// phpcs:disable Generic.Files.OneObjectStructurePerFile
+// phpcs:disable PSR1.Files.SideEffects
+
 namespace Heyday\MenuManager\Extensions;
 
 use Heyday\MenuManager\MenuSet;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Core\Extension;
 
-if (!class_exists('\SilverStripe\Subsites\Model\Subsite') ||
-    !class_exists('\SilverStripe\Subsites\State\SubsiteState')) {
+if (
+    !class_exists('\SilverStripe\Subsites\Model\Subsite') ||
+    !class_exists('\SilverStripe\Subsites\State\SubsiteState')
+) {
     return;
 }
 

@@ -53,7 +53,7 @@ class MenuItem extends DataObject implements PermissionProvider
     /**
      * @return string
      */
-    public function IsNewWindowNice(): string
+    public function getIsNewWindowNice(): string
     {
         return $this->IsNewWindow
             ? _t('SilverStripe\\Forms\\CheckboxField.YESANSWER', 'Yes')
@@ -193,10 +193,8 @@ class MenuItem extends DataObject implements PermissionProvider
         return $fields;
     }
 
-    /**
-     * @return mixed
-     */
-    public function Parent()
+
+    public function getParent(): ?MenuSet
     {
         return $this->MenuSet();
     }
@@ -227,6 +225,8 @@ class MenuItem extends DataObject implements PermissionProvider
                 }
             }
         }
+
+        return null;
     }
 
     /**
@@ -289,9 +289,9 @@ class MenuItem extends DataObject implements PermissionProvider
     public function getLinkTypes(): array
     {
         $types = [
-            'internal' => _t(__CLASS__ .'.INTERNAL', 'Link to an internal page'),
-            'external' => _t(__CLASS__ .'.EXTERNAL', 'Link to an external page, email or phone number'),
-            'file' => _t(__CLASS__ .'.FILE', 'Link to a file'),
+            'internal' => _t(__CLASS__ . '.INTERNAL', 'Link to an internal page'),
+            'external' => _t(__CLASS__ . '.EXTERNAL', 'Link to an external page, email or phone number'),
+            'file' => _t(__CLASS__ . '.FILE', 'Link to a file'),
         ];
 
         $this->invokeWithExtensions('updateLinkTypes', $types);
@@ -307,5 +307,38 @@ class MenuItem extends DataObject implements PermissionProvider
         } else {
             return 'link';
         }
+    }
+
+
+    public function getURL(): string
+    {
+        if ($this->PageID) {
+            $link = $this->Page()->Link();
+        } elseif ($this->FileID) {
+            $link = $this->File()->getURL();
+        } else {
+            $link = $this->Link;
+        }
+
+        if ($this->Anchor) {
+            $link .= '#' . $this->Anchor;
+        }
+
+        $this->extend('updateURL', $link);
+
+        return $link;
+    }
+
+
+    public function asArray(): array
+    {
+        return [
+            'id' => $this->ID,
+            'label' => $this->MenuTitle,
+            'href' => $this->getURL(),
+            'type' => $this->getLinkType(),
+            'target' => $this->IsNewWindow ? '_blank' : '_self',
+            'rel' => $this->IsNewWindow ? 'noopener noreferrer' : '',
+        ];
     }
 }
