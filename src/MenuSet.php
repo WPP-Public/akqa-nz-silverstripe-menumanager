@@ -112,7 +112,7 @@ class MenuSet extends DataObject implements PermissionProvider
     public function canDelete($member = null): bool
     {
         // Backwards compatibility for duplicate default sets
-        $existing = MenuManagerTemplateProvider::MenuSet($this->Name);
+        $existing = MenuManagerTemplateProvider::getMenuSet($this->Name);
         $isDuplicate = $existing && $existing->ID !== $this->ID;
 
         if ($this->isDefaultSet() && !$isDuplicate) {
