@@ -70,12 +70,8 @@ class MenuSet extends DataObject implements PermissionProvider
     {
         $result = parent::validate();
 
-        $existing = MenuManagerTemplateProvider::MenuSet($this->Name);
+        $existing = MenuManagerTemplateProvider::getMenuSet($this->Name);
 
-        /**
-         * @deprecated Since 4.0
-         * Use an index for the Name field instead https://docs.silverstripe.org/en/4/developer_guides/model/indexes/
-         */
         if ($existing && $existing->ID !== $this->ID) {
             $result->addError(
                 _t(
