@@ -44,4 +44,29 @@ class MenuItemTest extends SapphireTest
         $this->assertInstanceOf(CheckboxField::class, $fields->dataFieldByName('IsNewWindow'));
         $this->assertInstanceOf(UploadField::class, $fields->dataFieldByName('File'));
     }
+
+    public function testGetAbsoluteURLForInternalPage(): void
+    {
+        $item = $this->objFromFixture(MenuItem::class, 'header-1');
+
+        $this->assertSame($item->Page()->AbsoluteLink(), $item->getAbsoluteURL());
+    }
+
+    public function testGetAbsoluteURLForInternalPageWithAnchor(): void
+    {
+        $item = $this->objFromFixture(MenuItem::class, 'header-1');
+        $item->Anchor = 'section-one';
+
+        $this->assertSame(
+            $item->Page()->AbsoluteLink() . '#section-one',
+            $item->getAbsoluteURL()
+        );
+    }
+
+    public function testGetAbsoluteURLForExternalLink(): void
+    {
+        $item = $this->objFromFixture(MenuItem::class, 'header-2');
+
+        $this->assertSame($item->getURL(), $item->getAbsoluteURL());
+    }
 }

@@ -330,6 +330,22 @@ class MenuItem extends DataObject implements PermissionProvider
     }
 
 
+    public function getAbsoluteURL(): string
+    {
+        if ($this->PageID) {
+            $link = $this->Page()->AbsoluteLink();
+
+            if ($this->Anchor) {
+                $link .= '#' . $this->Anchor;
+            }
+
+            return $link;
+        }
+
+        return $this->getURL();
+    }
+
+
     public function asArray(): array
     {
         return [
