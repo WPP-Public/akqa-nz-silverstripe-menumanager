@@ -70,9 +70,13 @@ class MenuSet extends DataObject implements PermissionProvider
     {
         $result = parent::validate();
 
+        if ($this->Name === null || $this->Name === '') {
+            return $result;
+        }
+
         $existing = MenuManagerTemplateProvider::getMenuSet($this->Name);
 
-        if ($existing && $existing->ID !== $this->ID) {
+        if ($existing && $existing->ID !== $this->ID && $existing->Name === $this->Name) {
             $result->addError(
                 _t(
                     __CLASS__ . 'AlreadyExists',
