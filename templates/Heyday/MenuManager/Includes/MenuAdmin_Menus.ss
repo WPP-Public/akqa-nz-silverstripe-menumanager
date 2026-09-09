@@ -18,7 +18,7 @@
                             class="menu-tile__status"
                             title="<%t Heyday\MenuManager\MenuAdmin.HAS_DRAFT 'Has changes that are not published' %>"
                         >
-                            <span class="sr-only"><%t Heyday\MenuManager\MenuAdmin.HAS_DRAFT 'Has changes that are not published' %></span>
+                            <span class="menu-tile__status-text"><%t Heyday\MenuManager\MenuAdmin.HAS_DRAFT 'Has changes that are not published' %></span>
                         </span>
                     <% end_if %>
                 </span>

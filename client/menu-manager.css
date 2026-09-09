@@ -97,6 +97,22 @@
     overflow: hidden;
 }
 
+/*
+ * Visible only to screen readers. Defined here rather than borrowing a CMS utility class,
+ * because that name has changed between Bootstrap versions.
+ */
+.MenuAdmin .menu-tile__status-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 /* Unpublished changes, the same orange dot the Files section uses */
 .MenuAdmin .menu-tile__status {
     flex: 0 0 auto;
