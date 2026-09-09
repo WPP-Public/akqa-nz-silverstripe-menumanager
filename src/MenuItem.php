@@ -3,6 +3,7 @@
 namespace Heyday\MenuManager;
 
 use Akqa\SilverStripe\TreeField\Contracts\TreeNodeProvider;
+use SilverStripe\VersionedAdmin\Forms\HistoryViewerField;
 use SilverStripe\AssetAdmin\Forms\UploadField;
 use SilverStripe\Assets\File;
 use SilverStripe\CMS\Model\SiteTree;
@@ -22,6 +23,8 @@ use SilverStripe\Security\PermissionProvider;
  */
 class MenuItem extends DataObject implements PermissionProvider, TreeNodeProvider
 {
+    use EnsuresVersion;
+
     /**
      * @var string
      */
@@ -58,6 +61,15 @@ class MenuItem extends DataObject implements PermissionProvider, TreeNodeProvide
      * @var array
      */
     private static array $cascade_deletes = [
+        'Children',
+    ];
+
+    /**
+     * Publishing an item publishes everything nested under it.
+     *
+     * @var array
+     */
+    private static array $owns = [
         'Children',
     ];
 
@@ -214,9 +226,28 @@ class MenuItem extends DataObject implements PermissionProvider, TreeNodeProvide
             ]
         );
 
+        $this->addHistoryTab($fields);
+
         $this->extend('updateCMSFields', $fields);
 
         return $fields;
+    }
+
+
+    /**
+     * Who changed this record and when, with the option to roll back.
+     */
+    protected function addHistoryTab(FieldList $fields): void
+    {
+        if (!$this->isInDB() || !class_exists(HistoryViewerField::class)) {
+            return;
+        }
+
+        $fields->addFieldToTab(
+            'Root.History',
+            HistoryViewerField::create('MenuItemHistory')
+                ->setTitle(_t(__CLASS__ . '.HISTORY', 'History'))
+        );
     }
 
 
@@ -323,6 +354,28 @@ class MenuItem extends DataObject implements PermissionProvider, TreeNodeProvide
     }
 
     /**
+     * Fields that must never fall through to the linked page.
+     *
+     * Versioning columns in particular: an unsaved item has no Version of its own, and answering
+     * with the page's would confuse the versioning layer.
+     *
+     * @var array
+     */
+    private static array $no_page_fallback = [
+        'ID',
+        'Version',
+        'RecordID',
+        'AuthorID',
+        'PublisherID',
+        'WasPublished',
+        'WasDeleted',
+        'WasDraft',
+        'ParentItemID',
+        'MenuSetID',
+        'Sort',
+    ];
+
+    /**
      * Attempts to return the $field from this MenuItem
      * If $field is not found or it is not set then attempts
      * to return a similar field on the associated Page
@@ -335,7 +388,7 @@ class MenuItem extends DataObject implements PermissionProvider, TreeNodeProvide
     {
         $default = parent::__get($field);
 
-        if ($default || $field === 'ID') {
+        if ($default || in_array($field, static::config()->get('no_page_fallback') ?? [], true)) {
             return $default;
         } else {
             $page = $this->Page();

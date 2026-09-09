@@ -16,12 +16,16 @@ use SilverStripe\Core\Validation\ValidationResult;
 use SilverStripe\ORM\HasManyList;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
+use SilverStripe\Versioned\Versioned;
+use SilverStripe\VersionedAdmin\Forms\HistoryViewerField;
 
 /**
  * Class MenuSet
  */
 class MenuSet extends DataObject implements PermissionProvider
 {
+    use EnsuresVersion;
+
     private static string $table_name = 'MenuSet';
 
     private static array $db = [
@@ -40,6 +44,13 @@ class MenuSet extends DataObject implements PermissionProvider
 
     private static array $cascade_duplicates = [
         'MenuItems'
+    ];
+
+    /**
+     * Publishing a set publishes its items, so a menu is always published as a whole.
+     */
+    private static array $owns = [
+        'MenuItems',
     ];
 
     private static array $searchable_fields = [
@@ -181,6 +192,26 @@ class MenuSet extends DataObject implements PermissionProvider
 
 
     /**
+     * How this menu reads in the CMS menu picker: its name, plus a note when it has changes that
+     * are not live yet.
+     */
+    public function getMenuAdminTitle(): string
+    {
+        $title = $this->Name ?: _t(__CLASS__ . '.UNTITLED', 'Untitled menu');
+
+        if (!$this->hasExtension(Versioned::class) || !$this->isInDB()) {
+            return $title;
+        }
+
+        if (!$this->isPublished()) {
+            return sprintf('%s (%s)', $title, _t(__CLASS__ . '.DRAFT', 'draft'));
+        }
+
+        return $title;
+    }
+
+
+    /**
      * Check if this menu set appears in the default sets config
      * @return bool
      */
@@ -203,6 +234,74 @@ class MenuSet extends DataObject implements PermissionProvider
                 implode(', ', $this->getDefaultSetNames())
             ), 'created');
         }
+
+        $this->publishUnpublishedMenus();
+    }
+
+
+    /**
+     * Publish any menu that is not fully live yet.
+     *
+     * Menus became versioned in 5.1. Two things have to happen for an existing site to keep
+     * working after that upgrade:
+     *
+     *  - rows written before versioning have Version 0 and no version history at all. Publishing
+     *    compares the draft and live version numbers, so 0 against 0 reads as "no change" and
+     *    publishing would quietly do nothing. Writing the record once gives it version 1.
+     *  - the menu is then published recursively, which takes its items with it.
+     *
+     * Safe to run repeatedly: menus that are already live are left alone.
+     */
+    protected function publishUnpublishedMenus(): int
+    {
+        if (!$this->hasExtension(Versioned::class)) {
+            return 0;
+        }
+
+        $published = 0;
+
+        foreach (Versioned::get_by_stage(MenuSet::class, Versioned::DRAFT) as $set) {
+            if (!$set->needsInitialPublish()) {
+                continue;
+            }
+
+            $set->ensureVersionExists();
+
+            foreach ($set->MenuItems() as $item) {
+                $item->ensureVersionExists();
+            }
+
+            $set->publishRecursive();
+            $published++;
+        }
+
+        if ($published) {
+            DB::alteration_message(
+                sprintf('Published %d menu(s) that pre-date versioning', $published),
+                'changed'
+            );
+        }
+
+        return $published;
+    }
+
+
+    /**
+     * Whether this menu, or anything in it, has never been published.
+     */
+    public function needsInitialPublish(): bool
+    {
+        if (!$this->isPublished()) {
+            return true;
+        }
+
+        foreach ($this->MenuItems() as $item) {
+            if (!$item->isPublished()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
 
@@ -276,6 +375,14 @@ class MenuSet extends DataObject implements PermissionProvider
             );
         }
 
+
+        if ($this->isInDB() && class_exists(HistoryViewerField::class)) {
+            $fields->addFieldToTab(
+                'Root.History',
+                HistoryViewerField::create('MenuSetHistory')
+                    ->setTitle(_t(__CLASS__ . '.HISTORY', 'History'))
+            );
+        }
 
         $this->extend('updateCMSFields', $fields);
 

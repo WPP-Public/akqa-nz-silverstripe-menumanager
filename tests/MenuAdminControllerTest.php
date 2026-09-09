@@ -2,7 +2,8 @@
 
 namespace Heyday\MenuManager\Test;
 
-use Heyday\MenuManager\TreeField\MenuTreeSource;
+use Heyday\MenuManager\MenuSet;
+use Heyday\MenuManager\TreeField\MenuItemTreeSource;
 use SilverStripe\Dev\FunctionalTest;
 
 /**
@@ -25,26 +26,25 @@ class MenuAdminControllerTest extends FunctionalTest
 
         $this->assertStringContainsString('entwine-treefield', $body);
         $this->assertStringContainsString('data-schema-component="TreeField"', $body);
-        $this->assertStringContainsString(MenuTreeSource::KEY, $body);
+        $this->assertStringContainsString(MenuItemTreeSource::KEY, $body);
     }
 
-    public function testTreeEndpointReturnsSetsWithTheirItems(): void
+    public function testTreeEndpointReturnsTheLinksOfOneMenu(): void
     {
         $this->logInWithPermission(['ADMIN']);
 
-        $response = $this->get('admin/tree-field/tree/' . MenuTreeSource::KEY . '/0');
+        $header = $this->objFromFixture(MenuSet::class, 'header');
+        $response = $this->get(
+            'admin/tree-field/tree/' . MenuItemTreeSource::KEY . '/' . $header->ID
+        );
 
         $this->assertSame(200, $response->getStatusCode());
 
         $payload = json_decode((string) $response->getBody(), true);
         $titles = array_column($payload['nodes'], 'title');
 
-        $this->assertContains('Header', $titles);
-        $this->assertSame('set-' . $this->objFromFixture(
-            \Heyday\MenuManager\MenuSet::class,
-            'header'
-        )->ID, $payload['nodes'][0]['id']);
-        $this->assertNotEmpty($payload['nodes'][0]['children']);
+        $this->assertSame(['Header 1', 'Header 2', 'Header 3'], $titles);
+        $this->assertNotContains('Footer 1', $titles);
     }
 
     public function testSectionIsNotReachableWithoutCmsAccess(): void

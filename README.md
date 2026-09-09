@@ -9,8 +9,9 @@ tree hierarchy just won't do.
 composer require heyday/silverstripe-menumanager
 ```
 
-Run `dev/build` afterwards: nested links add a `ParentItemID` column to
-`MenuItem`.
+Run `dev/build` afterwards. It adds a `ParentItemID` column to `MenuItem` for
+nesting, creates the versioning tables, and publishes existing menus so the live
+site is unaffected.
 
 After completing this step, navigate in Terminal or similar to the SilverStripe
 root directory and run `composer install` or `composer update` depending on
@@ -18,13 +19,15 @@ whether or not you have composer already in use.
 
 ## Usage
 
-The `Menus` section of the CMS shows every menu set as one tree, with that set's
-links nested underneath it. Sets and links are added, renamed, re-ordered,
-nested and deleted in place, and whatever is selected has its own fields open
-alongside the tree.
+The `Menus` section edits one menu at a time. Pick the menu from the selector at
+the top; the section reopens on whichever menu you had last, or on the most
+recently edited one.
 
-* **Add menu** creates a new set at the top level.
-* The **+** on a row adds a link inside it, up to three levels of links deep.
+Its links are shown as a tree, and whatever is selected in that tree has its own
+fields open alongside it.
+
+* **Add menu** creates a new menu, **Delete menu** removes the current one.
+* The **+** on a row adds a link inside it, up to three levels deep.
 * Rows are re-ordered and nested by dragging, or from the row's own menu, which
   also offers move up, move down, indent and outdent for keyboard use.
 * Deleting a row deletes everything nested under it, after a confirmation that
@@ -33,10 +36,37 @@ alongside the tree.
 The tree is provided by [akqa/silverstripe-tree-field](https://github.com/WPP-Public/akqa-silverstripe-tree-field),
 which this module requires.
 
+### Drafts and publishing
+
+Menus are versioned. Adding, editing, moving and reordering changes the draft
+only, and the tree marks anything not yet live: draft rows are italic and carry
+a **Draft** or **Modified** badge, and the menu picker marks a menu that has
+never been published.
+
+**Publish menu** sends the menu and all of its links live in one go.
+**Unpublish** takes it off the live site while keeping the draft. Deleting is
+immediate rather than staged: it archives the record, taking it off live too.
+
+Each menu and each link has a **History** tab showing who changed it and when,
+with the option to roll back to an earlier version. History needs the
+`silverstripe/versioned-admin` module, which is installed as a dependency.
+
+Anyone with `MANAGE_MENU_SETS` or `MANAGE_MENU_ITEMS` can see draft menus. That
+is configured through `non_live_permissions`.
+
+#### Upgrading an existing site
+
+Menus written before versioning have no version history, and publishing compares
+version numbers, so they would appear to publish while nothing reached the live
+site. The first `dev/build` after upgrading gives every existing menu a first
+version and publishes it, leaving the live site exactly as it was. It reports
+how many menus it published, and is safe to run again.
+
 ### Creating a MenuSet
 
-Open the `Menus` section and choose **Add menu**, then give the set a Name,
-which is what you reference in templates when rendering the menu.
+Open the `Menus` section and choose **Add menu**, then give it a Name on the
+Settings tab. That name is what you reference in templates when rendering the
+menu. Publish the menu once you are happy with it.
 
 As it is common to reference MenuSets by name in templates, you can configure
 sets to be created automatically during the /dev/build task. These sets cannot
@@ -163,8 +193,8 @@ can be enabled with your menu to speed up rendering of your templates.
 
 ### Sorting menu sets
 
-Menu sets are dragged into order in the tree like anything else, so the old
-`allow_sorting` setting is gone and no configuration is needed.
+Menus are ordered by the `Sort` field on `MenuSet`, which the selector follows.
+The old `allow_sorting` setting is gone.
 
 ## Subsite Support
 
