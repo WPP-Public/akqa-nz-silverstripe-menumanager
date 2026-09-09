@@ -2,11 +2,11 @@
 
 namespace Heyday\MenuManager\Test;
 
+use Akqa\SilverStripe\TreeField\Form\TreeField;
 use Heyday\MenuManager\MenuSet;
 use Heyday\MenuManager\MenuManagerTemplateProvider;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;
-use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\TextField;
 use SilverStripe\Core\Validation\ValidationResult;
 
@@ -38,7 +38,7 @@ class MenuSetTest extends SapphireTest
         $menu = $this->objFromFixture(MenuSet::class, 'header');
         $fields = $menu->getCMSFields();
 
-        $this->assertInstanceOf(GridField::class, $fields->dataFieldByName('MenuItems'));
+        $this->assertInstanceOf(TreeField::class, $fields->dataFieldByName('MenuItems'));
         $this->assertNull($fields->dataFieldByName('Name'));
 
         $this->assertInstanceOf(

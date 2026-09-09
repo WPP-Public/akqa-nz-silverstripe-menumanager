@@ -1,0 +1,9 @@
+---
+Name: menumanager-treefield
+---
+Akqa\SilverStripe\TreeField\Services\TreeSourceRegistry:
+  sources:
+    # The whole structure: every menu set with its links nested underneath. Used by MenuAdmin.
+    menus: 'Heyday\MenuManager\TreeField\MenuTreeSource'
+    # The links of one menu set. Used when a MenuSet is edited on its own.
+    menu-items: 'Heyday\MenuManager\TreeField\MenuItemTreeSource'

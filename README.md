@@ -9,21 +9,34 @@ tree hierarchy just won't do.
 composer require heyday/silverstripe-menumanager
 ```
 
+Run `dev/build` afterwards: nested links add a `ParentItemID` column to
+`MenuItem`.
+
 After completing this step, navigate in Terminal or similar to the SilverStripe
 root directory and run `composer install` or `composer update` depending on
 whether or not you have composer already in use.
 
 ## Usage
 
-There are 2 main steps to creating a menu using menu management.
+The `Menus` section of the CMS shows every menu set as one tree, with that set's
+links nested underneath it. Sets and links are added, renamed, re-ordered,
+nested and deleted in place, and whatever is selected has its own fields open
+alongside the tree.
 
-1. Create a new MenuSet
-2. Add MenuItems to that MenuSet
+* **Add menu** creates a new set at the top level.
+* The **+** on a row adds a link inside it, up to three levels of links deep.
+* Rows are re-ordered and nested by dragging, or from the row's own menu, which
+  also offers move up, move down, indent and outdent for keyboard use.
+* Deleting a row deletes everything nested under it, after a confirmation that
+  says so.
+
+The tree is provided by [akqa/silverstripe-tree-field](https://github.com/WPP-Public/akqa-silverstripe-tree-field),
+which this module requires.
 
 ### Creating a MenuSet
 
-Login to the CMS and open the `Menus` admin, give the MenuSet a Name (which is
-what you reference in the templates when controlling the menu).
+Open the `Menus` section and choose **Add menu**, then give the set a Name,
+which is what you reference in templates when rendering the menu.
 
 As it is common to reference MenuSets by name in templates, you can configure
 sets to be created automatically during the /dev/build task. These sets cannot
@@ -38,7 +51,8 @@ Heyday\MenuManager\MenuSet:
 
 ### Creating MenuItems
 
-Once you have saved your `MenuSet` you can add `MenuItems`.
+Select a menu set in the tree and use the **+** on its row to add a link. Use
+the **+** on a link to nest another link inside it.
 
 MenuItems have 4 important fields:
 
@@ -82,9 +96,29 @@ content._
 
 ### Usage in template
 
+`$MenuItems` returns every link in the set regardless of nesting, which is what
+a flat menu wants:
+
 ```html
 <% loop $MenuSet('YourMenuName').MenuItems %>
 <a href="{$URL}" class="{$LinkingMode}">{$MenuTitle}</a>
+<% end_loop %>
+```
+
+For a nested menu, loop `$RootMenuItems` and then `$Children` on each link.
+Swapping a flat menu over to `$RootMenuItems` changes nothing until someone
+nests a link, and prevents nested links appearing twice once they do:
+
+```html
+<% loop $MenuSet('YourMenuName').RootMenuItems %>
+<a href="{$URL}" class="{$LinkingMode}">{$MenuTitle}</a>
+<% if $Children %>
+<ul>
+    <% loop $Children %>
+    <li><a href="{$URL}" class="{$LinkingMode}">{$MenuTitle}</a></li>
+    <% end_loop %>
+</ul>
+<% end_if %>
 <% end_loop %>
 ```
 
@@ -127,14 +161,10 @@ can be enabled with your menu to speed up rendering of your templates.
 <% end_with %>
 ```
 
-### Allow sorting of MenuSets
+### Sorting menu sets
 
-By default menu sets cannot be sorted, however, you can set your configuration to allow it.
-
-```yaml
-Heyday\MenuManager\MenuSet:
-    allow_sorting: true
-```
+Menu sets are dragged into order in the tree like anything else, so the old
+`allow_sorting` setting is gone and no configuration is needed.
 
 ## Subsite Support
 

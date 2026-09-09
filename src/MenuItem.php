@@ -2,6 +2,7 @@
 
 namespace Heyday\MenuManager;
 
+use Akqa\SilverStripe\TreeField\Contracts\TreeNodeProvider;
 use SilverStripe\AssetAdmin\Forms\UploadField;
 use SilverStripe\Assets\File;
 use SilverStripe\CMS\Model\SiteTree;
@@ -12,13 +13,14 @@ use SilverStripe\Forms\TabSet;
 use SilverStripe\Forms\TextField;
 use SilverStripe\Forms\TreeDropdownField;
 use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\HasManyList;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
 
 /**
  * Class MenuItem
  */
-class MenuItem extends DataObject implements PermissionProvider
+class MenuItem extends DataObject implements PermissionProvider, TreeNodeProvider
 {
     /**
      * @var string
@@ -40,6 +42,30 @@ class MenuItem extends DataObject implements PermissionProvider
         'Page' => SiteTree::class, // page the MenuItem refers to
         'MenuSet' => MenuSet::class,
         'File' => File::class,
+        // Nesting. Named ParentItem rather than Parent because getParent() already returns the
+        // MenuSet this item belongs to.
+        'ParentItem' => MenuItem::class,
+    ];
+
+    /**
+     * @var array
+     */
+    private static array $has_many = [
+        'Children' => MenuItem::class . '.ParentItem',
+    ];
+
+    /**
+     * @var array
+     */
+    private static array $cascade_deletes = [
+        'Children',
+    ];
+
+    /**
+     * @var array
+     */
+    private static array $cascade_duplicates = [
+        'Children',
     ];
 
     /**
@@ -200,6 +226,103 @@ class MenuItem extends DataObject implements PermissionProvider
     }
 
     /**
+     * Direct children of this item, in menu order.
+     *
+     * @return HasManyList<MenuItem>
+     */
+    public function getChildItems(): HasManyList
+    {
+        return $this->Children()->sort(['Sort' => 'ASC', 'ID' => 'ASC']);
+    }
+
+    /**
+     * Whether this item has anything nested under it.
+     */
+    public function hasChildItems(): bool
+    {
+        return $this->getChildItems()->exists();
+    }
+
+    /**
+     * How deep this item sits, where a top level item is 1.
+     */
+    public function getMenuLevel(): int
+    {
+        $level = 1;
+        $parent = $this->ParentItem();
+        $seen = [$this->ID => true];
+
+        while ($parent && $parent->exists() && !isset($seen[$parent->ID]) && $level < 20) {
+            $seen[$parent->ID] = true;
+            $level++;
+            $parent = $parent->ParentItem();
+        }
+
+        return $level;
+    }
+
+    /**
+     * The getTreeNode* methods below describe this item to the TreeField in the CMS.
+     */
+    public function getTreeNodeTitle(): string
+    {
+        return (string) $this->getTitle();
+    }
+
+    public function getTreeNodeSubtitle(): ?string
+    {
+        $url = $this->getURL();
+
+        return $url !== '' ? $url : null;
+    }
+
+    public function getTreeNodeIcon(): ?string
+    {
+        return match ($this->getLinkType()) {
+            'file' => 'font-icon-image',
+            'external' => 'font-icon-external-link',
+            default => 'font-icon-link',
+        };
+    }
+
+    /**
+     * @return array<int, array{text: string, type: string}>
+     */
+    public function getTreeNodeBadges(): array
+    {
+        $badges = [];
+
+        if ($this->IsNewWindow) {
+            $badges[] = [
+                'text' => _t(__CLASS__ . '.NewTabBadge', 'New tab'),
+                'type' => 'secondary',
+            ];
+        }
+
+        // Read the raw columns - __get() falls back to the linked page when a field is empty,
+        // which would make an item with no link of its own look like it has one
+        $hasOwnLink = (int) $this->getField('PageID')
+            || (int) $this->getField('FileID')
+            || (string) $this->getField('Link') !== '';
+
+        if (!$hasOwnLink) {
+            $badges[] = [
+                'text' => _t(__CLASS__ . '.NoLinkBadge', 'No link set'),
+                'type' => 'warning',
+            ];
+        }
+
+        $this->invokeWithExtensions('updateTreeNodeBadges', $badges);
+
+        return $badges;
+    }
+
+    public function allowsTreeChildren(): bool
+    {
+        return true;
+    }
+
+    /**
      * Attempts to return the $field from this MenuItem
      * If $field is not found or it is not set then attempts
      * to return a similar field on the associated Page
@@ -348,6 +471,12 @@ class MenuItem extends DataObject implements PermissionProvider
 
     public function asArray(): array
     {
+        $children = [];
+
+        foreach ($this->getChildItems() as $child) {
+            $children[] = $child->asArray();
+        }
+
         return [
             'id' => $this->ID,
             'label' => $this->MenuTitle,
@@ -355,6 +484,7 @@ class MenuItem extends DataObject implements PermissionProvider
             'type' => $this->getLinkType(),
             'target' => $this->IsNewWindow ? '_blank' : '_self',
             'rel' => $this->IsNewWindow ? 'noopener noreferrer' : '',
+            'children' => $children,
         ];
     }
 }

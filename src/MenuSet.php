@@ -2,11 +2,10 @@
 
 namespace Heyday\MenuManager;
 
+use Akqa\SilverStripe\TreeField\Form\TreeField;
+use Heyday\MenuManager\TreeField\MenuItemTreeSource;
 use SilverStripe\Forms\FieldList;
-use SilverStripe\Forms\GridField\GridField;
-use SilverStripe\Forms\GridField\GridFieldAddExistingAutocompleter;
-use SilverStripe\Forms\GridField\GridFieldConfig_RelationEditor;
-use SilverStripe\Forms\GridField\GridFieldDeleteAction;
+use SilverStripe\Forms\FormField;
 use SilverStripe\Forms\TabSet;
 use SilverStripe\Forms\TextareaField;
 use SilverStripe\Forms\TextField;
@@ -17,7 +16,6 @@ use SilverStripe\Core\Validation\ValidationResult;
 use SilverStripe\ORM\HasManyList;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
-use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
 
 /**
  * Class MenuSet
@@ -167,6 +165,22 @@ class MenuSet extends DataObject implements PermissionProvider
 
 
     /**
+     * The top level items of this set, for templates that render a nested menu.
+     *
+     * $MenuItems still returns every item in the set regardless of nesting, so templates that
+     * want a hierarchy should loop this and then $Children on each item.
+     *
+     * @return HasManyList<MenuItem>
+     */
+    public function getRootMenuItems(): HasManyList
+    {
+        return $this->MenuItems()
+            ->filter('ParentItemID', 0)
+            ->sort(['Sort' => 'ASC', 'ID' => 'ASC']);
+    }
+
+
+    /**
      * Check if this menu set appears in the default sets config
      * @return bool
      */
@@ -215,6 +229,21 @@ class MenuSet extends DataObject implements PermissionProvider
 
 
     /**
+     * The field used to manage this set's items: a tree with drag and drop nesting, and the
+     * selected item's own CMS fields alongside it.
+     */
+    protected function getMenuItemsField(): FormField
+    {
+        return TreeField::create(
+            'MenuItems',
+            _t(__CLASS__ . '.DB_Items', 'Items'),
+            MenuItemTreeSource::KEY,
+            (int) $this->ID
+        );
+    }
+
+
+    /**
      * @return FieldList
      */
     public function getCMSFields(): FieldList
@@ -222,25 +251,7 @@ class MenuSet extends DataObject implements PermissionProvider
         $fields = FieldList::create(TabSet::create('Root'));
         if ($this->ID != null) {
             $fields->removeByName('Name');
-            $config = GridFieldConfig_RelationEditor::create();
-            $fields->addFieldToTab(
-                'Root.Main',
-                new GridField(
-                    'MenuItems',
-                    '',
-                    $this->MenuItems(),
-                    $config
-                )
-            );
-
-            $remove = $config->getComponentByType(GridFieldDeleteAction::class);
-
-            if ($remove) {
-                $remove->setRemoveRelation(false);
-            }
-
-            $config->addComponent(new GridFieldOrderableRows('Sort'));
-            $config->removeComponentsByType(GridFieldAddExistingAutocompleter::class);
+            $fields->addFieldToTab('Root.Main', $this->getMenuItemsField());
             $fields->addFieldToTab(
                 'Root.Meta',
                 TextareaField::create('Description', _t(__CLASS__ . '.DB_Description', 'Description'))
@@ -318,9 +329,10 @@ class MenuSet extends DataObject implements PermissionProvider
         return [
             'name' => $this->Name,
             'description' => $this->Description,
-            'items' => $this->MenuItems()->map(function (MenuItem $item) {
-                return $item->asArray();
-            })->toArray(),
+            'items' => array_map(
+                fn (MenuItem $item) => $item->asArray(),
+                $this->getRootMenuItems()->toArray()
+            ),
         ];
     }
 }

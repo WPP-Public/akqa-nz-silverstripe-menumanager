@@ -2,96 +2,83 @@
 
 namespace Heyday\MenuManager;
 
-use SilverStripe\Admin\ModelAdmin;
-use SilverStripe\Core\Config\Config;
-use SilverStripe\Forms\GridField\GridField;
-use SilverStripe\Forms\GridField\GridFieldAddNewButton;
-use SilverStripe\Forms\GridField\GridFieldImportButton;
-use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
+use Akqa\SilverStripe\TreeField\Form\TreeField;
+use Heyday\MenuManager\TreeField\MenuTreeSource;
+use SilverStripe\Admin\LeftAndMain;
+use SilverStripe\Forms\FieldList;
+use SilverStripe\Forms\Form;
+use SilverStripe\Forms\LiteralField;
+use SilverStripe\Security\Security;
 
 /**
- * Class MenuAdmin
+ * The Menus section of the CMS.
+ *
+ * The whole structure is one tree: every menu set, with its links nested underneath. Sets and
+ * links are added, renamed, re-ordered, nested and deleted in place, and the selected record's own
+ * CMS fields sit alongside the tree.
  */
-class MenuAdmin extends ModelAdmin
+class MenuAdmin extends LeftAndMain
 {
-    /**
-     * @var array
-     */
-    private static array $managed_models = [
-        MenuSet::class,
-    ];
-
-    /**
-     * @var string
-     */
     private static string $url_segment = 'menu-manager';
 
-    /**
-     * @var string
-     */
     private static string $menu_title = 'Menus';
 
-    /**
-     * @var string
-     */
     private static string $menu_icon_class = 'font-icon-link';
 
     /**
-     * @var array
-     */
-    private static array $model_importers = [];
-
-    /**
-     * @var bool
+     * Whether menu sets can be created and deleted from the CMS. Turn this off on a site where
+     * the sets are fixed by configuration.
      */
     private static bool $enable_cms_create = true;
 
-    /**
-     * Adjust the CMS's ability to create MenuSets
-     *
-     * {@inheritDoc}
-     */
-    public function getEditForm($id = null, $fields = null)
+    public function getEditForm($id = null, $fields = null): Form
     {
-        $form = parent::getEditForm($id, $fields);
+        $fields = FieldList::create();
 
-        /** @var GridField $gridField */
-        $gridField = $form->Fields()->dataFieldByName($this->sanitiseClassName(MenuSet::class));
+        if (!MenuSet::singleton()->canView()) {
+            $fields->push(LiteralField::create(
+                'MenuPermissionMessage',
+                sprintf(
+                    '<p class="message warning">%s</p>',
+                    _t(__CLASS__ . '.NO_PERMISSION', 'You do not have permission to manage menus.')
+                )
+            ));
 
-        if ($gridField) {
-            if (!$this->config()->get('enable_cms_create')) {
-                $gridField->getConfig()
-                    ->removeComponentsByType([
-                        GridFieldAddNewButton::class,
-                        GridFieldImportButton::class,
-                    ]);
-            }
+            $form = Form::create($this, 'EditForm', $fields, FieldList::create());
+            $form->addExtraClass('cms-edit-form fill-height');
+            $form->setTemplate($this->getTemplatesWithSuffix('_EditForm'));
+
+            return $form;
         }
 
-        if (Config::inst()->get($this->modelClass, 'allow_sorting')) {
-            $gridFieldName = $this->sanitiseClassName($this->modelClass);
-            $gridField = $form->Fields()->fieldByName($gridFieldName);
+        $tree = TreeField::create(
+            'Menus',
+            '',
+            MenuTreeSource::KEY
+        );
 
-            $gridField->getConfig()->addComponent(new GridFieldOrderableRows());
-        }
+        $fields->push($tree);
 
+        $form = Form::create($this, 'EditForm', $fields, FieldList::create());
+        $form->addExtraClass('cms-edit-form cms-panel-padded center flexbox-area-grow fill-height');
+        $form->setTemplate($this->getTemplatesWithSuffix('_EditForm'));
+        $form->setAttribute('data-pjax-fragment', 'CurrentForm');
+
+        $this->extend('updateEditForm', $form);
 
         return $form;
     }
 
-
-    public function getList()
+    public function canView($member = null): bool
     {
-        $list = parent::getList();
-
-        if ($this->modelClass === MenuSet::class) {
-            if (class_exists('\SilverStripe\Subsites\State\SubsiteState')) {
-                $list = $list->filter([
-                    'SubsiteID' => \SilverStripe\Subsites\State\SubsiteState::singleton()->getSubsiteId()
-                ]);
-            }
+        if (!$member) {
+            $member = Security::getCurrentUser();
         }
 
-        return $list;
+        if (!parent::canView($member)) {
+            return false;
+        }
+
+        return MenuSet::singleton()->canView($member);
     }
 }
