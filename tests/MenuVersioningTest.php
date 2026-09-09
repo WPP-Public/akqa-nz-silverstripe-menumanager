@@ -212,11 +212,12 @@ class MenuVersioningTest extends SapphireTest
 
     public function testAddingAMenuLeavesTheNameForTheEditorToChoose(): void
     {
-        $admin = $this->admin();
         $before = MenuSet::get()->count();
 
-        $admin->addMenuSet([], Form::create($admin, 'EditForm'));
-        $admin->addMenuSet([], Form::create($admin, 'EditForm'));
+        // A fresh controller each time: one request only ever redirects once
+        foreach ([$this->admin(), $this->admin()] as $admin) {
+            $admin->addMenuSet([], Form::create($admin, 'EditForm'));
+        }
 
         $this->assertSame($before + 2, MenuSet::get()->count());
 

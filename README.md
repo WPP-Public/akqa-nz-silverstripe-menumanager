@@ -49,6 +49,14 @@ never been published.
 **Unpublish** takes it off the live site while keeping the draft. Deleting is
 immediate rather than staged: it archives the record, taking it off live too.
 
+### A note on the preview and the record id
+
+The CMS preview watches for an input named `ID` in the content panel. When the page in the preview
+does not match it, the CMS navigates to that page's edit form. A menu is never the page being
+previewed, so the section would throw the member into the Pages section the moment the preview
+loaded. The record id therefore travels as `MenuSetID`, and `MenuAdmin` overrides `save()` and
+`delete()` to read it from there.
+
 ### Previewing
 
 Menus are previewable, so the site opens beside the tree in the CMS preview

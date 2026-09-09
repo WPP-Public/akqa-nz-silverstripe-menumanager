@@ -9,6 +9,7 @@ use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\Form;
 use SilverStripe\Forms\FormAction;
+use SilverStripe\Forms\HiddenField;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\DataList;
@@ -112,9 +113,59 @@ class MenuAdmin extends SingleRecordAdmin
             $this->getBackToMenusField()
         );
 
+        // The CMS preview watches for an input named ID in the content panel and, when the page
+        // in the preview does not match it, navigates the whole CMS to that page's edit form.
+        // A menu is never the page being previewed, so that would throw the member out of this
+        // section the moment the preview loaded. The record id travels as MenuSetID instead.
+        $form->Fields()->removeByName('ID');
+        $form->Fields()->push(
+            HiddenField::create('MenuSetID')->setValue($this->currentRecordID())
+        );
+
         $form->addExtraClass('menu-admin');
 
         return $form;
+    }
+
+    /**
+     * Save the open menu.
+     *
+     * Overridden because LeftAndMain::save() finds its record through an input named ID, which
+     * this form deliberately does not have.
+     */
+    public function save(array $data, Form $form): HTTPResponse
+    {
+        $set = $this->getCurrentMenuSet();
+
+        if (!$set) {
+            $this->httpError(404);
+        }
+
+        if (!$set->canEdit()) {
+            $this->httpError(403);
+        }
+
+        // The record id travels with the form but is not data
+        $saveable = array_values(array_diff(
+            array_keys($form->Fields()->saveableFields()),
+            ['MenuSetID']
+        ));
+
+        $form->saveInto($set, $saveable);
+
+        $validation = $set->validate();
+
+        if (!$validation->isValid()) {
+            $form->setSessionValidationResult($validation);
+
+            return $this->respondWith(
+                $validation->getMessages()[0]['message'] ?? _t(__CLASS__ . '.INVALID', 'Not saved')
+            );
+        }
+
+        $set->write();
+
+        return $this->respondWith(_t(__CLASS__ . '.SAVED', 'Saved'));
     }
 
     /**
@@ -202,10 +253,7 @@ class MenuAdmin extends SingleRecordAdmin
         // Owning the links means one call sends the whole menu live
         $set->publishRecursive();
 
-        return $this->reloadForm(
-            _t(__CLASS__ . '.PUBLISHED_MESSAGE', 'Published menu'),
-            (int) $set->ID
-        );
+        return $this->respondWith(_t(__CLASS__ . '.PUBLISHED_MESSAGE', 'Published menu'));
     }
 
     public function unpublish(array $data, Form $form): HTTPResponse
@@ -218,10 +266,7 @@ class MenuAdmin extends SingleRecordAdmin
 
         $set->doUnpublish();
 
-        return $this->reloadForm(
-            _t(__CLASS__ . '.UNPUBLISHED_MESSAGE', 'Unpublished menu'),
-            (int) $set->ID
-        );
+        return $this->respondWith(_t(__CLASS__ . '.UNPUBLISHED_MESSAGE', 'Unpublished menu'));
     }
 
     public function addMenuSet(array $data, Form $form): HTTPResponse
@@ -237,10 +282,12 @@ class MenuAdmin extends SingleRecordAdmin
         $set->Sort = $this->getMenuSets()->count() + 1;
         $set->write();
 
-        return $this->reloadForm(
-            _t(__CLASS__ . '.ADDED', 'Menu added'),
-            (int) $set->ID
-        );
+        // Open the new menu, which means changing which record the section is showing
+        return $this->redirect(Controller::join_links(
+            Director::baseURL(),
+            $this->Link(),
+            '?MenuSetID=' . $set->ID
+        ));
     }
 
     /**
@@ -251,7 +298,7 @@ class MenuAdmin extends SingleRecordAdmin
     {
         // The menu the form names, not whichever one happens to be open. Acting on the current
         // record would let a stray submission delete a menu nobody chose.
-        $id = (string) ($data['ID'] ?? '');
+        $id = (string) ($data['MenuSetID'] ?? $data['ID'] ?? '');
 
         if (!ctype_digit($id)) {
             $this->httpError(400, 'No menu was named');
@@ -273,25 +320,18 @@ class MenuAdmin extends SingleRecordAdmin
             $set->delete();
         }
 
-        return $this->reloadForm(_t(__CLASS__ . '.DELETED', 'Menu deleted'));
+        // Back to the list, since the menu that was open is gone
+        return $this->redirect(Controller::join_links(Director::baseURL(), $this->Link()));
     }
 
     /**
-     * Send the rebuilt form back to the CMS with a message for the member.
+     * Re-render the section with a message, the way the rest of the CMS answers a form action.
      */
-    protected function reloadForm(string $message, ?int $recordID = null): HTTPResponse
+    protected function respondWith(string $message): HTTPResponse
     {
-        if ($recordID) {
-            $this->getRequest()->offsetSet('MenuSetID', (string) $recordID);
-        }
+        $this->getResponse()->addHeader('X-Status', rawurlencode($message));
 
-        $form = $this->getEditForm($recordID);
-
-        if ($form) {
-            $form->setMessage($message, 'good');
-        }
-
-        return $this->getSchemaResponse($this->Link('schema/EditForm'), $form);
+        return $this->getResponseNegotiator()->respond($this->getRequest());
     }
 
     public function getRecord($id): ?DataObject
