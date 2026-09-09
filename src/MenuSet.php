@@ -11,7 +11,6 @@ use SilverStripe\Forms\TabSet;
 use SilverStripe\Forms\TextareaField;
 use SilverStripe\Forms\TextField;
 use SilverStripe\ORM\DataList;
-use SilverStripe\CMS\Controllers\RootURLController;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
 use SilverStripe\ORM\CMSPreviewable;
@@ -274,6 +273,15 @@ class MenuSet extends DataObject implements PermissionProvider, CMSPreviewable
     public function getChildren(): HasManyList
     {
         return $this->MenuItems();
+    }
+
+
+    /**
+     * Number of links in this menu, at any level.
+     */
+    public function getMenuItemCount(): int
+    {
+        return $this->getAllMenuItems()->count();
     }
 
 
@@ -562,6 +570,11 @@ class MenuSet extends DataObject implements PermissionProvider, CMSPreviewable
             $actions->push(
                 FormAction::create('delete', _t(MenuAdmin::class . '.DELETE_MENU', 'Delete menu'))
                     ->addExtraClass('btn btn-outline-danger font-icon-trash-bin')
+                    ->setAttribute('data-confirm-message', _t(
+                        MenuAdmin::class . '.CONFIRM_DELETE',
+                        'Delete "{title}" and all {count} of its links?',
+                        ['title' => $this->getTitle(), 'count' => $this->getMenuItemCount()]
+                    ))
                     ->setUseButtonTag(true)
             );
         }
@@ -651,8 +664,9 @@ class MenuSet extends DataObject implements PermissionProvider, CMSPreviewable
             return null;
         }
 
-        $link = static::config()->get('preview_url')
-            ?: Director::absoluteURL(RootURLController::get_homepage_link());
+        // The site root rather than the home page's URL segment: Silverstripe redirects the
+        // segment to the root, and the preview iframe loses its stage parameters on the way
+        $link = static::config()->get('preview_url') ?: Director::absoluteBaseURL();
 
         $this->extend('updatePreviewLink', $link, $action);
 
@@ -671,6 +685,7 @@ class MenuSet extends DataObject implements PermissionProvider, CMSPreviewable
         }
 
         return Controller::join_links(
+            Director::baseURL(),
             MenuAdmin::singleton()->Link(),
             '?MenuSetID=' . $this->ID
         );

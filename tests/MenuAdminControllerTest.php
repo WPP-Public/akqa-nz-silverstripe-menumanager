@@ -14,19 +14,72 @@ class MenuAdminControllerTest extends FunctionalTest
 {
     protected static $fixture_file = 'MenuTest.yml';
 
-    public function testSectionRendersTheTreeField(): void
+    private function openMenuUrl(): string
+    {
+        return 'admin/menu-manager?MenuSetID='
+            . $this->objFromFixture(MenuSet::class, 'header')->ID;
+    }
+
+    private function bodyFor(string $url): string
     {
         $this->logInWithPermission(['ADMIN']);
 
-        $response = $this->get('admin/menu-manager');
-
+        $response = $this->get($url);
         $this->assertSame(200, $response->getStatusCode());
 
-        $body = (string) $response->getBody();
+        return (string) $response->getBody();
+    }
+
+    public function testTheSectionOpensOnTheListOfMenus(): void
+    {
+        $body = $this->bodyFor('admin/menu-manager');
+
+        $this->assertStringContainsString('menu-admin__grid', $body);
+        $this->assertStringContainsString('menu-tile__title', $body);
+        $this->assertStringNotContainsString('entwine-treefield', $body);
+    }
+
+    public function testATileLinksStraightToItsMenu(): void
+    {
+        $footer = $this->objFromFixture(MenuSet::class, 'footer');
+        $body = $this->bodyFor('admin/menu-manager');
+
+        $this->assertStringContainsString(
+            'href="/admin/menu-manager?MenuSetID=' . $footer->ID . '"',
+            $body
+        );
+    }
+
+    public function testATileFlagsUnpublishedChanges(): void
+    {
+        $body = $this->bodyFor('admin/menu-manager');
+
+        $this->assertStringContainsString('menu-tile--draft', $body);
+        $this->assertStringContainsString('menu-tile__status', $body);
+    }
+
+    public function testOpeningAMenuRendersTheTreeField(): void
+    {
+        $body = $this->bodyFor($this->openMenuUrl());
 
         $this->assertStringContainsString('entwine-treefield', $body);
         $this->assertStringContainsString('data-schema-component="TreeField"', $body);
         $this->assertStringContainsString(MenuItemTreeSource::KEY, $body);
+    }
+
+    public function testOpeningAMenuScopesTheTreeToIt(): void
+    {
+        $footer = $this->objFromFixture(MenuSet::class, 'footer');
+        $body = $this->bodyFor('admin/menu-manager?MenuSetID=' . $footer->ID);
+
+        $this->assertStringContainsString('data-scope-id="' . $footer->ID . '"', $body);
+    }
+
+    public function testOpeningAMenuOffersAWayBack(): void
+    {
+        $body = $this->bodyFor($this->openMenuUrl());
+
+        $this->assertStringContainsString('menu-admin__back', $body);
     }
 
     /**
@@ -35,9 +88,7 @@ class MenuAdminControllerTest extends FunctionalTest
      */
     public function testTabsUseTheCmsTabset(): void
     {
-        $this->logInWithPermission(['ADMIN']);
-
-        $body = (string) $this->get('admin/menu-manager')->getBody();
+        $body = $this->bodyFor($this->openMenuUrl());
 
         $this->assertMatchesRegularExpression('/class="[^"]*cms-tabset[^"]*"/', $body);
         $this->assertStringNotContainsString('ss-tabset field CompositeField tabset', $body);
@@ -50,9 +101,7 @@ class MenuAdminControllerTest extends FunctionalTest
      */
     public function testTheTreeHasNoLabelColumn(): void
     {
-        $this->logInWithPermission(['ADMIN']);
-
-        $body = (string) $this->get('admin/menu-manager')->getBody();
+        $body = $this->bodyFor($this->openMenuUrl());
 
         $this->assertStringContainsString(
             'id="Form_EditForm_MenuItems_Holder" class="form-group field treefield form-group--no-label"',
@@ -60,84 +109,23 @@ class MenuAdminControllerTest extends FunctionalTest
         );
     }
 
-    public function testTheMenuPickerIsRendered(): void
-    {
-        $this->logInWithPermission(['ADMIN']);
-
-        $body = (string) $this->get('admin/menu-manager')->getBody();
-
-        $this->assertStringContainsString('menu-admin__selector', $body);
-        $this->assertStringContainsString('data-menu-admin-link', $body);
-    }
-
-    /**
-     * A relative link here resolves against the section's own URL, so changing the picker lands
-     * somewhere that redirects straight back and the section appears not to react.
-     */
-    public function testThePickerLinksToAnAbsolutePath(): void
-    {
-        $this->logInWithPermission(['ADMIN']);
-
-        $body = (string) $this->get('admin/menu-manager')->getBody();
-
-        $this->assertMatchesRegularExpression(
-            '#data-menu-admin-link="/[^"]*menu-manager"#',
-            $body
-        );
-    }
-
-    /**
-     * Otherwise the CMS treats switching menu as an unsaved edit and warns on every change.
-     */
-    public function testThePickerIsExcludedFromChangeTracking(): void
-    {
-        $this->logInWithPermission(['ADMIN']);
-
-        $body = (string) $this->get('admin/menu-manager')->getBody();
-
-        $this->assertMatchesRegularExpression(
-            '#<select name="MenuSetID"[^>]*class="[^"]*no-change-track#',
-            $body
-        );
-    }
-
-    public function testChangingTheMenuOpensThatMenu(): void
-    {
-        $this->logInWithPermission(['ADMIN']);
-
-        $footer = $this->objFromFixture(MenuSet::class, 'footer');
-        $body = (string) $this->get('admin/menu-manager?MenuSetID=' . $footer->ID)->getBody();
-
-        $this->assertStringContainsString(
-            'data-scope-id="' . $footer->ID . '"',
-            $body,
-            'The tree reloads scoped to the menu named in the query string'
-        );
-    }
-
     public function testEveryActionIsOffered(): void
     {
-        $this->logInWithPermission(['ADMIN']);
-
-        $body = (string) $this->get('admin/menu-manager')->getBody();
+        $body = $this->bodyFor($this->openMenuUrl());
 
         foreach (['action_save', 'action_publish', 'action_addMenuSet', 'action_delete'] as $action) {
             $this->assertStringContainsString($action, $body);
         }
     }
 
-    public function testTreeEndpointReturnsTheLinksOfOneMenu(): void
+    public function testTheTreeEndpointReturnsTheLinksOfOneMenu(): void
     {
-        $this->logInWithPermission(['ADMIN']);
-
         $header = $this->objFromFixture(MenuSet::class, 'header');
-        $response = $this->get(
+        $body = $this->bodyFor(
             'admin/tree-field/tree/' . MenuItemTreeSource::KEY . '/' . $header->ID
         );
 
-        $this->assertSame(200, $response->getStatusCode());
-
-        $payload = json_decode((string) $response->getBody(), true);
+        $payload = json_decode($body, true);
         $titles = array_column($payload['nodes'], 'title');
 
         $this->assertSame(['Header 1', 'Header 2', 'Header 3'], $titles);
@@ -149,8 +137,6 @@ class MenuAdminControllerTest extends FunctionalTest
         $this->logOut();
         $this->autoFollowRedirection = false;
 
-        $response = $this->get('admin/menu-manager');
-
-        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame(302, $this->get('admin/menu-manager')->getStatusCode());
     }
 }

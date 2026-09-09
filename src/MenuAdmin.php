@@ -3,12 +3,14 @@
 namespace Heyday\MenuManager;
 
 use SilverStripe\Admin\SingleRecordAdmin;
-use SilverStripe\Control\Cookie;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPResponse;
-use SilverStripe\Forms\DropdownField;
+use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\Form;
+use SilverStripe\Forms\FormAction;
+use SilverStripe\Forms\LiteralField;
+use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Security;
@@ -25,11 +27,6 @@ use SilverStripe\Versioned\Versioned;
  */
 class MenuAdmin extends SingleRecordAdmin
 {
-    /**
-     * Remembers the menu the member last had open, so the section reopens where they left off.
-     */
-    public const SET_COOKIE = 'menumanager-last-set';
-
     private static string $url_segment = 'menu-manager';
 
     private static string $menu_title = 'Menus';
@@ -78,25 +75,17 @@ class MenuAdmin extends SingleRecordAdmin
         $sets = $this->getMenuSets();
         $request = $this->getRequest();
 
+        // Only ever the menu the request names. With nothing named, the section shows its
+        // landing view of every menu rather than guessing at one.
         foreach (['MenuSetID', 'ID'] as $param) {
             $requested = (string) ($request->requestVar($param) ?: '');
 
             if (ctype_digit($requested) && $sets->byID((int) $requested)) {
-                $this->rememberMenuSet((int) $requested);
-
                 return (int) $requested;
             }
         }
 
-        $remembered = (string) (Cookie::get(self::SET_COOKIE) ?: '');
-
-        if (ctype_digit($remembered) && $sets->byID((int) $remembered)) {
-            return (int) $remembered;
-        }
-
-        $latest = $sets->sort('LastEdited', 'DESC')->first();
-
-        return $latest ? (int) $latest->ID : null;
+        return null;
     }
 
     public function getCurrentMenuSet(): ?MenuSet
@@ -106,23 +95,21 @@ class MenuAdmin extends SingleRecordAdmin
         return $id ? $this->getMenuSets()->byID($id) : null;
     }
 
-    protected function rememberMenuSet(int $id): void
-    {
-        Cookie::set(self::SET_COOKIE, (string) $id, 30, null, null, false, false);
-    }
-
     public function getEditForm($id = null, $fields = null): ?Form
     {
+        if (!$id && !$this->currentRecordID()) {
+            return $this->getMenuListForm();
+        }
+
         $form = parent::getEditForm($id, $fields);
 
         if (!$form) {
             return $form;
         }
 
-        // The picker belongs above everything else in the form
         $form->Fields()->insertBefore(
             $form->Fields()->first()?->getName() ?: '',
-            $this->getMenuSetSelectorField()
+            $this->getBackToMenusField()
         );
 
         $form->addExtraClass('menu-admin');
@@ -131,37 +118,69 @@ class MenuAdmin extends SingleRecordAdmin
     }
 
     /**
-     * The menu picker. Changing it reopens the section on that menu.
+     * The section's landing view: every menu as a tile.
      */
-    protected function getMenuSetSelectorField(): DropdownField
+    protected function getMenuListForm(): Form
     {
-        $source = [];
+        $fields = FieldList::create(
+            LiteralField::create('Menus', $this->renderMenuList())
+        );
 
-        foreach ($this->getMenuSets() as $set) {
-            $source[$set->ID] = $set->getMenuAdminTitle();
+        $actions = FieldList::create();
+
+        if ($this->config()->get('enable_cms_create') && MenuSet::singleton()->canCreate()) {
+            $actions->push(
+                FormAction::create('addMenuSet', _t(__CLASS__ . '.ADD_MENU', 'Add menu'))
+                    ->addExtraClass('btn btn-primary font-icon-plus-circled')
+                    ->setUseButtonTag(true)
+            );
         }
 
-        $field = DropdownField::create(
-            'MenuSetID',
-            _t(__CLASS__ . '.CURRENT_MENU', 'Menu'),
-            $source,
-            $this->currentRecordID()
-        );
+        $form = Form::create($this, 'EditForm', $fields, $actions);
+        $form->addExtraClass('cms-edit-form fill-height menu-admin menu-admin--list');
+        $form->setTemplate($this->getTemplatesWithSuffix('_EditForm'));
+        $form->setAttribute('data-pjax-fragment', 'CurrentForm');
 
-        // no-change-track keeps the CMS from treating a menu switch as an unsaved edit and
-        // warning the member every time they change menu
-        $field->addExtraClass('menu-admin__selector no-change-track');
+        $this->extend('updateMenuListForm', $form);
 
-        // An absolute path, because the browser would otherwise resolve a relative admin link
-        // against the section's own URL and land somewhere that redirects straight back. A path
-        // rather than a full URL, so it does not depend on the base URL being configured.
-        $field->setAttribute(
-            'data-menu-admin-link',
-            Controller::join_links(Director::baseURL(), $this->Link())
-        );
-        $field->setEmptyString(_t(__CLASS__ . '.CHOOSE_MENU', 'Choose a menu'));
+        return $form;
+    }
 
-        return $field;
+    protected function renderMenuList(): string
+    {
+        return (string) $this
+            ->customise(['Menus' => $this->getViewableMenuSets()])
+            ->renderWith('Heyday/MenuManager/Includes/MenuAdmin_Menus');
+    }
+
+    /**
+     * The menus the current member is allowed to see, for the landing view.
+     *
+     * @return ArrayList<MenuSet>
+     */
+    public function getViewableMenuSets(): ArrayList
+    {
+        $viewable = ArrayList::create();
+
+        foreach ($this->getMenuSets() as $set) {
+            if ($set->canView()) {
+                $viewable->push($set);
+            }
+        }
+
+        return $viewable;
+    }
+
+    /**
+     * Takes the member back to the list of menus.
+     */
+    protected function getBackToMenusField(): LiteralField
+    {
+        return LiteralField::create('BackToMenus', sprintf(
+            '<p class="menu-admin__back"><a href="%s" class="font-icon-left-open-big">%s</a></p>',
+            Controller::join_links(Director::baseURL(), $this->Link()),
+            _t(__CLASS__ . '.ALL_MENUS', 'All menus')
+        ));
     }
 
     /**
@@ -218,8 +237,6 @@ class MenuAdmin extends SingleRecordAdmin
         $set->Sort = $this->getMenuSets()->count() + 1;
         $set->write();
 
-        $this->rememberMenuSet((int) $set->ID);
-
         return $this->reloadForm(
             _t(__CLASS__ . '.ADDED', 'Menu added'),
             (int) $set->ID
@@ -232,9 +249,21 @@ class MenuAdmin extends SingleRecordAdmin
      */
     public function delete(array $data, Form $form): HTTPResponse
     {
-        $set = $this->getCurrentMenuSet();
+        // The menu the form names, not whichever one happens to be open. Acting on the current
+        // record would let a stray submission delete a menu nobody chose.
+        $id = (string) ($data['ID'] ?? '');
 
-        if (!$set || !$set->canDelete()) {
+        if (!ctype_digit($id)) {
+            $this->httpError(400, 'No menu was named');
+        }
+
+        $set = $this->getMenuSets()->byID((int) $id);
+
+        if (!$set) {
+            $this->httpError(404);
+        }
+
+        if (!$set->canDelete()) {
             $this->httpError(403);
         }
 
@@ -243,8 +272,6 @@ class MenuAdmin extends SingleRecordAdmin
         } else {
             $set->delete();
         }
-
-        Cookie::force_expiry(self::SET_COOKIE);
 
         return $this->reloadForm(_t(__CLASS__ . '.DELETED', 'Menu deleted'));
     }

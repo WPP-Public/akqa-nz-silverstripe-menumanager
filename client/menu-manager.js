@@ -80,6 +80,30 @@
         window.location.assign(url.toString());
     });
 
+    /**
+     * Deleting a menu takes its links with it, so make sure it was meant.
+     */
+    document.addEventListener(
+        "click",
+        (event) => {
+            const button = event.target && event.target.closest
+                ? event.target.closest('[name="action_delete"]')
+                : null;
+
+            if (!button || !button.closest(".menu-admin")) {
+                return;
+            }
+
+            const message = button.getAttribute("data-confirm-message");
+
+            if (!window.confirm(message || "Delete this menu and all of its links?")) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        },
+        true
+    );
+
     document.addEventListener("DOMContentLoaded", () => {
         syncLinkTypes(document);
 

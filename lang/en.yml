@@ -1,10 +1,14 @@
 en:
   Heyday\MenuManager\MenuAdmin:
     MENUTITLE: "Menus"
-    CURRENT_MENU: "Menu"
-    CHOOSE_MENU: "Choose a menu"
+    ALL_MENUS: "All menus"
+    EDIT_MENU: "Edit {title}"
+    HAS_DRAFT: "Has changes that are not published"
+    LINK_COUNT: "{count} links"
+    NO_MENUS: "There are no menus yet. Add one to get started."
     ADD_MENU: "Add menu"
     DELETE_MENU: "Delete menu"
+    CONFIRM_DELETE: 'Delete "{title}" and all {count} of its links?'
     ADDED: "Menu added"
     DELETED: "Menu deleted"
     PUBLISHED_MESSAGE: "Published menu"

@@ -187,6 +187,29 @@ class MenuVersioningTest extends SapphireTest
         $this->assertFalse(MenuSet::get()->byID($set->ID)->isPublished());
     }
 
+    public function testDeleteRefusesWithoutAMenuToDelete(): void
+    {
+        $admin = $this->admin();
+
+        $this->expectException(\SilverStripe\Control\HTTPResponse_Exception::class);
+        $admin->delete([], Form::create($admin, 'EditForm'));
+    }
+
+    public function testDeleteOnlyEverRemovesTheMenuItWasGiven(): void
+    {
+        $header = $this->header();
+        $footer = $this->objFromFixture(MenuSet::class, 'footer');
+
+        $admin = $this->admin(['MenuSetID' => (string) $header->ID]);
+        $admin->delete(['ID' => $footer->ID], Form::create($admin, 'EditForm'));
+
+        $this->assertNull(MenuSet::get()->byID($footer->ID));
+        $this->assertNotNull(
+            MenuSet::get()->byID($header->ID),
+            'The menu that happened to be open is untouched'
+        );
+    }
+
     public function testAddingAMenuLeavesTheNameForTheEditorToChoose(): void
     {
         $admin = $this->admin();

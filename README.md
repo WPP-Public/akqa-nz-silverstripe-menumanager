@@ -19,14 +19,16 @@ whether or not you have composer already in use.
 
 ## Usage
 
-The `Menus` section edits one menu at a time. Pick the menu from the selector at
-the top; the section reopens on whichever menu you had last, or on the most
-recently edited one.
+The `Menus` section opens on a grid of every menu. Each tile shows the menu's
+title, its reference name, how many links it holds, its description, and an
+orange dot when it has changes that are not published yet. Clicking a tile opens
+that menu.
 
-Its links are shown as a tree, and whatever is selected in that tree has its own
-fields open alongside it.
+A menu's links are shown as a tree, and whatever is selected in that tree has
+its own fields open alongside it.
 
-* **Add menu** creates a new menu, **Delete menu** removes the current one.
+* **Add menu** creates a new menu. **Delete menu** removes the open one, after a
+  confirmation naming the menu and how many links go with it.
 * The **+** on a row adds a link inside it, up to three levels deep.
 * Rows are re-ordered and nested by dragging, or from the row's own menu, which
   also offers move up, move down, indent and outdent for keyboard use.

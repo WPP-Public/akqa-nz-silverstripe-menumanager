@@ -6,12 +6,10 @@ use Akqa\SilverStripe\TreeField\Form\TreeField;
 use Heyday\MenuManager\MenuAdmin;
 use Heyday\MenuManager\MenuSet;
 use Heyday\MenuManager\TreeField\MenuItemTreeSource;
-use SilverStripe\Control\Cookie;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Control\Session;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
-use SilverStripe\ORM\FieldType\DBDatetime;
 
 class MenuAdminTest extends SapphireTest
 {
@@ -36,88 +34,115 @@ class MenuAdminTest extends SapphireTest
     {
         parent::setUp();
 
-        Cookie::force_expiry(MenuAdmin::SET_COOKIE);
         $this->logInWithPermission(['CMS_ACCESS', 'MANAGE_MENU_SETS', 'MANAGE_MENU_ITEMS']);
     }
 
-    public function testEditFormShowsOneMenuAtATime(): void
+    public function testTheSectionOpensOnTheListOfMenus(): void
     {
-        $fields = $this->makeAdmin()->getEditForm()->Fields();
-        $tree = $fields->dataFieldByName('MenuItems');
+        $admin = $this->makeAdmin();
 
-        $this->assertInstanceOf(TreeField::class, $tree);
-        $this->assertSame(MenuItemTreeSource::KEY, $tree->getSourceKey());
-        $this->assertNotNull(
-            $tree->getScopeID(),
-            'The tree is scoped to a single menu rather than showing them all'
-        );
+        $this->assertNull($admin->getCurrentMenuSet());
+
+        $fields = $admin->getEditForm()->Fields();
+
+        $this->assertNotNull($fields->fieldByName('Menus'));
+        $this->assertNull($fields->dataFieldByName('MenuItems'));
     }
 
-    public function testMenuIsChosenByRequest(): void
+    public function testTheListShowsEveryMenu(): void
+    {
+        $html = (string) $this->makeAdmin()->getEditForm()->Fields()->fieldByName('Menus')->getContent();
+
+        $this->assertStringContainsString('menu-admin__grid', $html);
+        $this->assertSame(2, substr_count($html, 'menu-tile__title'));
+        // The fixture names lose their spaces, and the title falls back to the name
+        $this->assertStringContainsString('Header', $html);
+        $this->assertStringContainsString('Footer1', $html);
+    }
+
+    public function testATileLinksToItsMenu(): void
     {
         $footer = $this->objFromFixture(MenuSet::class, 'footer');
+        $html = (string) $this->makeAdmin()->getEditForm()->Fields()->fieldByName('Menus')->getContent();
 
+        $this->assertStringContainsString('MenuSetID=' . $footer->ID, $html);
+    }
+
+    public function testATileShowsTheTitleRatherThanTheName(): void
+    {
+        $set = $this->objFromFixture(MenuSet::class, 'header');
+        $set->Title = 'Main navigation';
+        $set->write();
+
+        $html = (string) $this->makeAdmin()->getEditForm()->Fields()->fieldByName('Menus')->getContent();
+
+        $this->assertStringContainsString('Main navigation', $html);
+        $this->assertStringContainsString('Header', $html, 'The reference name is shown too');
+    }
+
+    public function testATileShowsTheNumberOfLinksAndTheDescription(): void
+    {
+        $set = $this->objFromFixture(MenuSet::class, 'header');
+        $set->Description = 'The main site navigation';
+        $set->write();
+
+        $html = (string) $this->makeAdmin()->getEditForm()->Fields()->fieldByName('Menus')->getContent();
+
+        $this->assertStringContainsString('3 links', $html);
+        $this->assertStringContainsString('The main site navigation', $html);
+    }
+
+    public function testATileFlagsUnpublishedChanges(): void
+    {
+        $html = (string) $this->makeAdmin()->getEditForm()->Fields()->fieldByName('Menus')->getContent();
+
+        $this->assertStringContainsString('menu-tile--draft', $html, 'Unpublished menus are flagged');
+
+        foreach (MenuSet::get() as $set) {
+            $set->publishRecursive();
+        }
+
+        $html = (string) $this->makeAdmin()->getEditForm()->Fields()->fieldByName('Menus')->getContent();
+
+        $this->assertStringNotContainsString('menu-tile--draft', $html);
+    }
+
+    public function testOpeningAMenuShowsItsTree(): void
+    {
+        $footer = $this->objFromFixture(MenuSet::class, 'footer');
         $admin = $this->makeAdmin(['MenuSetID' => (string) $footer->ID]);
 
         $this->assertSame($footer->ID, $admin->getCurrentMenuSet()->ID);
-        $this->assertSame(
-            $footer->ID,
-            (int) $admin->getEditForm()->Fields()->dataFieldByName('MenuItems')->getScopeID()
-        );
+
+        $tree = $admin->getEditForm()->Fields()->dataFieldByName('MenuItems');
+
+        $this->assertInstanceOf(TreeField::class, $tree);
+        $this->assertSame(MenuItemTreeSource::KEY, $tree->getSourceKey());
+        $this->assertSame($footer->ID, (int) $tree->getScopeID());
     }
 
-    public function testAnUnknownMenuInTheRequestIsIgnored(): void
+    public function testOpeningAMenuOffersAWayBack(): void
+    {
+        $footer = $this->objFromFixture(MenuSet::class, 'footer');
+        $fields = $this->makeAdmin(['MenuSetID' => (string) $footer->ID])->getEditForm()->Fields();
+
+        $this->assertNotNull($fields->fieldByName('BackToMenus'));
+    }
+
+    public function testAnUnknownMenuInTheRequestFallsBackToTheList(): void
     {
         $admin = $this->makeAdmin(['MenuSetID' => '999999']);
 
-        $this->assertNotNull($admin->getCurrentMenuSet());
-        $this->assertNotSame(999999, $admin->getCurrentMenuSet()->ID);
+        $this->assertNull($admin->getCurrentMenuSet());
+        $this->assertNotNull($admin->getEditForm()->Fields()->fieldByName('Menus'));
     }
 
-    public function testTheChosenMenuIsRemembered(): void
-    {
-        $footer = $this->objFromFixture(MenuSet::class, 'footer');
-
-        $this->makeAdmin(['MenuSetID' => (string) $footer->ID])->getCurrentMenuSet();
-
-        $this->assertSame((string) $footer->ID, Cookie::get(MenuAdmin::SET_COOKIE));
-        $this->assertSame($footer->ID, $this->makeAdmin()->getCurrentMenuSet()->ID);
-    }
-
-    public function testWithoutAChoiceTheMostRecentlyEditedMenuOpens(): void
-    {
-        $header = $this->objFromFixture(MenuSet::class, 'header');
-        $footer = $this->objFromFixture(MenuSet::class, 'footer');
-
-        DBDatetime::set_mock_now('2026-01-01 09:00:00');
-        $header->forceChange();
-        $header->write();
-
-        DBDatetime::set_mock_now('2026-01-02 09:00:00');
-        $footer->forceChange();
-        $footer->write();
-        DBDatetime::clear_mock_now();
-
-        $this->assertSame($footer->ID, $this->makeAdmin()->getCurrentMenuSet()->ID);
-    }
-
-    public function testSelectorListsEveryMenu(): void
-    {
-        $selector = $this->makeAdmin()->getEditForm()->Fields()->dataFieldByName('MenuSetID');
-
-        $this->assertNotNull($selector);
-        $this->assertCount(2, $selector->getSource());
-    }
-
-    public function testWithoutPermissionThereIsNoForm(): void
+    public function testWithoutPermissionThereIsNoList(): void
     {
         $this->logInWithPermission(['CMS_ACCESS']);
 
-        $admin = $this->makeAdmin();
+        $html = (string) $this->makeAdmin()->getEditForm()->Fields()->fieldByName('Menus')->getContent();
 
-        $this->assertNull(
-            $admin->getEditForm(),
-            'A member who cannot see menus gets a permission failure rather than a form'
-        );
+        $this->assertStringNotContainsString('menu-tile', $html);
     }
 }
