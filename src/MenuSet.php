@@ -11,6 +11,10 @@ use SilverStripe\Forms\TabSet;
 use SilverStripe\Forms\TextareaField;
 use SilverStripe\Forms\TextField;
 use SilverStripe\ORM\DataList;
+use SilverStripe\CMS\Controllers\RootURLController;
+use SilverStripe\Control\Controller;
+use SilverStripe\Control\Director;
+use SilverStripe\ORM\CMSPreviewable;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
 use SilverStripe\Core\Validation\ValidationResult;
@@ -24,7 +28,7 @@ use SilverStripe\VersionedAdmin\Forms\HistoryViewerField;
 /**
  * Class MenuSet
  */
-class MenuSet extends DataObject implements PermissionProvider
+class MenuSet extends DataObject implements PermissionProvider, CMSPreviewable
 {
     use EnsuresVersion;
 
@@ -64,6 +68,19 @@ class MenuSet extends DataObject implements PermissionProvider
     ];
 
     private static string $default_sort = 'Sort ASC';
+
+    /**
+     * The page the preview panel opens on. Menus render site wide, so the home page is the
+     * default. Point this at another URL if a menu is better judged somewhere else.
+     */
+    private static ?string $preview_url = null;
+
+    /**
+     * Offer draft and published toggles in the preview, the way pages do.
+     */
+    private static bool $show_stage_link = true;
+
+    private static bool $show_live_link = true;
 
     /**
      * @return array
@@ -617,6 +634,46 @@ class MenuSet extends DataObject implements PermissionProvider
             'Description' => _t(__CLASS__ . '.DB_Description', 'Description'),
             'MenuItems.Count' => _t(__CLASS__ . '.DB_Items', 'Items')
         ];
+    }
+
+
+    /**
+     * Where the CMS preview panel points.
+     *
+     * Menus are not pages, so there is nothing to preview in isolation. The panel opens the site
+     * itself, which is where the menu is actually seen. Because menus are versioned, the
+     * navigator's draft and published toggles work as they do for pages.
+     */
+    // phpcs:ignore PSR1.Methods.CamelCapsMethodName -- defined by CMSPreviewable
+    public function PreviewLink($action = null): ?string
+    {
+        if (!$this->canView()) {
+            return null;
+        }
+
+        $link = static::config()->get('preview_url')
+            ?: Director::absoluteURL(RootURLController::get_homepage_link());
+
+        $this->extend('updatePreviewLink', $link, $action);
+
+        return $link;
+    }
+
+    public function getMimeType(): string
+    {
+        return 'text/html';
+    }
+
+    public function getCMSEditLink(): ?string
+    {
+        if (!$this->isInDB()) {
+            return null;
+        }
+
+        return Controller::join_links(
+            MenuAdmin::singleton()->Link(),
+            '?MenuSetID=' . $this->ID
+        );
     }
 
 

@@ -47,6 +47,23 @@ never been published.
 **Unpublish** takes it off the live site while keeping the draft. Deleting is
 immediate rather than staged: it archives the record, taking it off live too.
 
+### Previewing
+
+Menus are previewable, so the site opens beside the tree in the CMS preview
+panel with draft and published toggles, the same as editing a page. A menu is
+not a page, so the preview opens the site's home page, which is where a menu is
+actually seen. Point it somewhere else per site:
+
+```yaml
+Heyday\MenuManager\MenuSet:
+    preview_url: 'https://example.com/about-us'
+```
+
+Switching the preview to Draft renders the site with unpublished menu changes,
+which is the point of publishing being a separate step.
+
+### History and rollback
+
 Each menu and each link has a **History** tab showing who changed it and when,
 with the option to roll back to an earlier version. History needs the
 `silverstripe/versioned-admin` module, which is installed as a dependency.
