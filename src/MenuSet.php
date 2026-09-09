@@ -5,6 +5,7 @@ namespace Heyday\MenuManager;
 use Akqa\SilverStripe\TreeField\Form\TreeField;
 use Heyday\MenuManager\TreeField\MenuItemTreeSource;
 use SilverStripe\Forms\FieldList;
+use SilverStripe\Forms\FormAction;
 use SilverStripe\Forms\FormField;
 use SilverStripe\Forms\TabSet;
 use SilverStripe\Forms\TextareaField;
@@ -15,6 +16,7 @@ use SilverStripe\ORM\DB;
 use SilverStripe\Core\Validation\ValidationResult;
 use SilverStripe\ORM\HasManyList;
 use SilverStripe\Security\Permission;
+use SilverStripe\Security\Security;
 use SilverStripe\Security\PermissionProvider;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\VersionedAdmin\Forms\HistoryViewerField;
@@ -29,7 +31,10 @@ class MenuSet extends DataObject implements PermissionProvider
     private static string $table_name = 'MenuSet';
 
     private static array $db = [
+        // The reference used in templates, e.g. $MenuSet('MainMenu'). Never contains spaces.
         'Name' => 'Varchar(255)',
+        // What editors call this menu. Free text, and safe to change at any time.
+        'Title' => 'Varchar(255)',
         'Description' => 'Text',
         'Sort' => 'Int'
     ];
@@ -79,24 +84,75 @@ class MenuSet extends DataObject implements PermissionProvider
     {
         $result = parent::validate();
 
-        if ($this->Name === null || $this->Name === '') {
+        $name = static::normaliseName($this->Name);
+
+        if ($name === '') {
             return $result;
         }
 
-        $existing = MenuManagerTemplateProvider::getMenuSet($this->Name);
+        // A menu listed in default_sets is referenced by name in config and in templates, so its
+        // name is fixed once created
+        $changed = $this->getChangedFields(true);
+        $previous = $changed['Name']['before'] ?? null;
 
-        if ($existing && $existing->ID !== $this->ID && $existing->Name === $this->Name) {
+        if ($previous && $previous !== $name && in_array($previous, $this->getDefaultSetNames())) {
+            $result->addError(
+                _t(
+                    __CLASS__ . '.NameLocked',
+                    'The menu "{name}" is required by this site, so its name cannot be changed',
+                    ['name' => $previous]
+                ),
+                ValidationResult::TYPE_ERROR
+            );
+
+            return $result;
+        }
+
+        $existing = MenuManagerTemplateProvider::getMenuSet($name);
+
+        if ($existing && $existing->ID !== $this->ID && $existing->Name === $name) {
             $result->addError(
                 _t(
                     __CLASS__ . 'AlreadyExists',
                     'A Menu Set with the Name "{name}" already exists',
-                    ['name' => $this->Name]
+                    ['name' => $name]
                 ),
                 ValidationResult::TYPE_ERROR
             );
         }
 
         return $result;
+    }
+
+
+    /**
+     * Names are used as references, so they never contain whitespace.
+     */
+    public static function normaliseName(?string $name): string
+    {
+        return preg_replace('/\s+/', '', (string) $name);
+    }
+
+
+    public function onBeforeWrite(): void
+    {
+        parent::onBeforeWrite();
+
+        $this->Name = static::normaliseName($this->Name);
+
+        // A menu created before Title existed reads by its name
+        if (!$this->Title && $this->Name) {
+            $this->Title = $this->Name;
+        }
+    }
+
+
+    /**
+     * What editors see. Falls back to the reference name.
+     */
+    public function getTitle(): string
+    {
+        return (string) ($this->getField('Title') ?: $this->getField('Name'));
     }
 
     /**
@@ -120,8 +176,10 @@ class MenuSet extends DataObject implements PermissionProvider
      */
     public function canDelete($member = null): bool
     {
-        // Backwards compatibility for duplicate default sets
-        $existing = MenuManagerTemplateProvider::getMenuSet($this->Name);
+        // Backwards compatibility for duplicate default sets. A menu added in the CMS has no
+        // name until the editor gives it one, so there is nothing to look up.
+        $name = static::normaliseName($this->Name);
+        $existing = $name === '' ? null : MenuManagerTemplateProvider::getMenuSet($name);
         $isDuplicate = $existing && $existing->ID !== $this->ID;
 
         if ($this->isDefaultSet() && !$isDuplicate) {
@@ -167,6 +225,33 @@ class MenuSet extends DataObject implements PermissionProvider
 
 
     /**
+     * The top level items of this menu, in order.
+     *
+     * Nested items are excluded, so a template that loops $MenuItems renders one level and can
+     * descend into $Children where it wants to. Use getAllMenuItems() for every item regardless
+     * of nesting.
+     *
+     * @return HasManyList<MenuItem>
+     */
+    // phpcs:ignore PSR1.Methods.CamelCapsMethodName -- overrides the has_many accessor
+    public function MenuItems(): HasManyList
+    {
+        return $this->getAllMenuItems()->filter('ParentItemID', 0);
+    }
+
+
+    /**
+     * Every item in this menu, nested or not.
+     *
+     * @return HasManyList<MenuItem>
+     */
+    public function getAllMenuItems(): HasManyList
+    {
+        return $this->getComponents('MenuItems')->sort(['Sort' => 'ASC', 'ID' => 'ASC']);
+    }
+
+
+    /**
      * @return HasManyList<MenuItem>
      */
     public function getChildren(): HasManyList
@@ -176,28 +261,12 @@ class MenuSet extends DataObject implements PermissionProvider
 
 
     /**
-     * The top level items of this set, for templates that render a nested menu.
-     *
-     * $MenuItems still returns every item in the set regardless of nesting, so templates that
-     * want a hierarchy should loop this and then $Children on each item.
-     *
-     * @return HasManyList<MenuItem>
-     */
-    public function getRootMenuItems(): HasManyList
-    {
-        return $this->MenuItems()
-            ->filter('ParentItemID', 0)
-            ->sort(['Sort' => 'ASC', 'ID' => 'ASC']);
-    }
-
-
-    /**
      * How this menu reads in the CMS menu picker: its name, plus a note when it has changes that
      * are not live yet.
      */
     public function getMenuAdminTitle(): string
     {
-        $title = $this->Name ?: _t(__CLASS__ . '.UNTITLED', 'Untitled menu');
+        $title = $this->getTitle() ?: _t(__CLASS__ . '.UNTITLED', 'Untitled menu');
 
         if (!$this->hasExtension(Versioned::class) || !$this->isInDB()) {
             return $title;
@@ -217,7 +286,9 @@ class MenuSet extends DataObject implements PermissionProvider
      */
     public function isDefaultSet(): bool
     {
-        return in_array($this->Name, $this->getDefaultSetNames());
+        $name = static::normaliseName($this->Name);
+
+        return $name !== '' && in_array($name, $this->getDefaultSetNames());
     }
 
 
@@ -267,7 +338,7 @@ class MenuSet extends DataObject implements PermissionProvider
 
             $set->ensureVersionExists();
 
-            foreach ($set->MenuItems() as $item) {
+            foreach ($set->getAllMenuItems() as $item) {
                 $item->ensureVersionExists();
             }
 
@@ -295,7 +366,7 @@ class MenuSet extends DataObject implements PermissionProvider
             return true;
         }
 
-        foreach ($this->MenuItems() as $item) {
+        foreach ($this->getAllMenuItems() as $item) {
             if (!$item->isPublished()) {
                 return true;
             }
@@ -333,9 +404,11 @@ class MenuSet extends DataObject implements PermissionProvider
      */
     protected function getMenuItemsField(): FormField
     {
+        // No title: the tree is the whole content of its tab, and a label column would only
+        // narrow it
         return TreeField::create(
             'MenuItems',
-            _t(__CLASS__ . '.DB_Items', 'Items'),
+            '',
             MenuItemTreeSource::KEY,
             (int) $this->ID
         );
@@ -348,40 +421,24 @@ class MenuSet extends DataObject implements PermissionProvider
     public function getCMSFields(): FieldList
     {
         $fields = FieldList::create(TabSet::create('Root'));
-        if ($this->ID != null) {
-            $fields->removeByName('Name');
+
+        if ($this->isInDB()) {
             $fields->addFieldToTab('Root.Main', $this->getMenuItemsField());
-            $fields->addFieldToTab(
-                'Root.Meta',
-                TextareaField::create('Description', _t(__CLASS__ . '.DB_Description', 'Description'))
-            );
+            $fields->addFieldToTab('Root.Settings', $this->getTitleField());
+            $fields->addFieldToTab('Root.Settings', $this->getNameField());
+            $fields->addFieldToTab('Root.Settings', $this->getDescriptionField());
+
+            if (class_exists(HistoryViewerField::class)) {
+                $fields->addFieldToTab(
+                    'Root.History',
+                    HistoryViewerField::create('MenuSetHistory')
+                        ->setTitle(_t(__CLASS__ . '.HISTORY', 'History'))
+                );
+            }
         } else {
-            $fields->addFieldToTab(
-                'Root.Main',
-                TextField::create(
-                    'Name',
-                    _t(__CLASS__ . '.DB_Name', 'Name')
-                )->setDescription(
-                    _t(
-                        __CLASS__ . '.DB_Name_Description',
-                        'This field can\'t be changed once set'
-                    )
-                )
-            );
-
-            $fields->addFieldToTab(
-                'Root.Main',
-                TextareaField::create('Description', _t(__CLASS__ . '.DB_Description', 'Description'))
-            );
-        }
-
-
-        if ($this->isInDB() && class_exists(HistoryViewerField::class)) {
-            $fields->addFieldToTab(
-                'Root.History',
-                HistoryViewerField::create('MenuSetHistory')
-                    ->setTitle(_t(__CLASS__ . '.HISTORY', 'History'))
-            );
+            $fields->addFieldToTab('Root.Main', $this->getTitleField());
+            $fields->addFieldToTab('Root.Main', $this->getNameField());
+            $fields->addFieldToTab('Root.Main', $this->getDescriptionField());
         }
 
         $this->extend('updateCMSFields', $fields);
@@ -390,12 +447,143 @@ class MenuSet extends DataObject implements PermissionProvider
     }
 
 
+    protected function getTitleField(): TextField
+    {
+        return TextField::create('Title', _t(__CLASS__ . '.DB_Title', 'Title'))
+            ->setDescription(_t(
+                __CLASS__ . '.DB_Title_Description',
+                'What this menu is called in the CMS. Safe to change at any time.'
+            ));
+    }
+
+
+    protected function getNameField(): FormField
+    {
+        $field = TextField::create('Name', _t(__CLASS__ . '.DB_Name', 'Name'));
+
+        // Templates and config refer to a menu by name, so it is fixed once one has been set.
+        // A menu added in the CMS starts without one, so the editor gets to choose it.
+        if ($this->isInDB() && $this->getField('Name')) {
+            return $field
+                ->setDescription(_t(
+                    __CLASS__ . '.DB_Name_Locked',
+                    'The reference templates use. It cannot be changed once the menu is saved.'
+                ))
+                ->performReadonlyTransformation();
+        }
+
+        return $field->setDescription(_t(
+            __CLASS__ . '.DB_Name_Description',
+            'The reference templates use. Spaces are removed, and it cannot be changed once the '
+            . 'menu is saved.'
+        ));
+    }
+
+
+    protected function getDescriptionField(): TextareaField
+    {
+        return TextareaField::create(
+            'Description',
+            _t(__CLASS__ . '.DB_Description', 'Description')
+        );
+    }
+
+
+    /**
+     * The buttons shown at the bottom of the Menus section.
+     */
+    public function getCMSActions(): FieldList
+    {
+        $actions = FieldList::create();
+        $member = Security::getCurrentUser();
+        $versioned = $this->hasExtension(Versioned::class);
+
+        if ($this->isInDB() && $this->canEdit($member)) {
+            $actions->push(
+                FormAction::create('save', _t(__CLASS__ . '.SAVE', 'Save'))
+                    ->addExtraClass('btn btn-primary font-icon-save')
+                    ->setUseButtonTag(true)
+            );
+        }
+
+        if ($versioned && $this->isInDB() && $this->canPublish()) {
+            $hasChanges = $this->hasDraftChanges();
+
+            $publish = FormAction::create(
+                'publish',
+                $hasChanges
+                    ? _t(__CLASS__ . '.PUBLISH', 'Publish menu')
+                    : _t(__CLASS__ . '.PUBLISHED', 'Published')
+            )
+                ->addExtraClass('btn btn-outline-primary font-icon-rocket')
+                ->setUseButtonTag(true);
+
+            if (!$hasChanges) {
+                $publish->setDisabled(true);
+            }
+
+            $actions->push($publish);
+
+            if ($this->isPublished() && $this->canUnpublish()) {
+                $actions->push(
+                    FormAction::create('unpublish', _t(__CLASS__ . '.UNPUBLISH', 'Unpublish'))
+                        ->addExtraClass('btn btn-outline-danger font-icon-cancel-circled')
+                        ->setUseButtonTag(true)
+                );
+            }
+        }
+
+        if (MenuAdmin::config()->get('enable_cms_create') && $this->canCreate($member)) {
+            $actions->push(
+                FormAction::create('addMenuSet', _t(MenuAdmin::class . '.ADD_MENU', 'Add menu'))
+                    ->addExtraClass('btn btn-secondary font-icon-plus-circled')
+                    ->setUseButtonTag(true)
+            );
+        }
+
+        if ($this->isInDB() && $this->canDelete($member)) {
+            $actions->push(
+                FormAction::create('delete', _t(MenuAdmin::class . '.DELETE_MENU', 'Delete menu'))
+                    ->addExtraClass('btn btn-outline-danger font-icon-trash-bin')
+                    ->setUseButtonTag(true)
+            );
+        }
+
+        $this->extend('updateCMSActions', $actions);
+
+        return $actions;
+    }
+
+
+    /**
+     * Whether this menu, or any link in it, has changes that are not live yet.
+     */
+    public function hasDraftChanges(): bool
+    {
+        if (!$this->hasExtension(Versioned::class) || !$this->isInDB()) {
+            return false;
+        }
+
+        if (!$this->isPublished() || $this->isModifiedOnDraft()) {
+            return true;
+        }
+
+        foreach ($this->getAllMenuItems() as $item) {
+            if (!$item->isPublished() || $item->isModifiedOnDraft()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
     /**
      * {@inheritDoc}
      */
     public function onBeforeDelete()
     {
-        $menuItems = $this->MenuItems();
+        $menuItems = $this->getAllMenuItems();
 
         if ($menuItems instanceof DataList && count($menuItems) > 0) {
             foreach ($menuItems as $menuItem) {
@@ -424,6 +612,7 @@ class MenuSet extends DataObject implements PermissionProvider
     public function summaryFields(): array
     {
         return [
+            'Title' => _t(__CLASS__ . '.DB_Title', 'Title'),
             'Name' => _t(__CLASS__ . '.DB_Name', 'Name'),
             'Description' => _t(__CLASS__ . '.DB_Description', 'Description'),
             'MenuItems.Count' => _t(__CLASS__ . '.DB_Items', 'Items')
@@ -438,7 +627,7 @@ class MenuSet extends DataObject implements PermissionProvider
             'description' => $this->Description,
             'items' => array_map(
                 fn (MenuItem $item) => $item->asArray(),
-                $this->getRootMenuItems()->toArray()
+                $this->MenuItems()->toArray()
             ),
         ];
     }

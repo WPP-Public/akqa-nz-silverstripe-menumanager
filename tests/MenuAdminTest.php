@@ -109,13 +109,15 @@ class MenuAdminTest extends SapphireTest
         $this->assertCount(2, $selector->getSource());
     }
 
-    public function testEditFormExplainsItselfWithoutPermission(): void
+    public function testWithoutPermissionThereIsNoForm(): void
     {
         $this->logInWithPermission(['CMS_ACCESS']);
 
-        $fields = $this->makeAdmin()->getEditForm()->Fields();
+        $admin = $this->makeAdmin();
 
-        $this->assertNull($fields->dataFieldByName('MenuItems'));
-        $this->assertNotNull($fields->fieldByName('MenuPermissionMessage'));
+        $this->assertNull(
+            $admin->getEditForm(),
+            'A member who cannot see menus gets a permission failure rather than a form'
+        );
     }
 }

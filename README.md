@@ -64,9 +64,22 @@ how many menus it published, and is safe to run again.
 
 ### Creating a MenuSet
 
-Open the `Menus` section and choose **Add menu**, then give it a Name on the
-Settings tab. That name is what you reference in templates when rendering the
-menu. Publish the menu once you are happy with it.
+Open the `Menus` section and choose **Add menu**, then fill in the Settings tab.
+Publish the menu once you are happy with it.
+
+A menu has two labels:
+
+* **Title** is what editors see, in the menu picker and everywhere else in the
+  CMS. It is free text and safe to change at any time.
+* **Name** is the reference templates use, as in `$MenuSet('MainMenu')`. Spaces
+  are stripped from it on save.
+
+A new menu starts without a name, so the first thing to do on the Settings tab
+is give it one. Once a name is saved the field becomes readonly, because
+templates and configuration refer to the menu by it.
+
+A menu listed under `default_sets` cannot be deleted either, because the site
+depends on it. Its title can still be changed.
 
 As it is common to reference MenuSets by name in templates, you can configure
 sets to be created automatically during the /dev/build task. These sets cannot
@@ -126,8 +139,9 @@ content._
 
 ### Usage in template
 
-`$MenuItems` returns every link in the set regardless of nesting, which is what
-a flat menu wants:
+`$MenuItems` returns the top level of the menu. Nested links are excluded, so an
+existing flat menu renders exactly as it did before. Use `$AllMenuItems` when
+you want every link regardless of nesting.
 
 ```html
 <% loop $MenuSet('YourMenuName').MenuItems %>
@@ -135,12 +149,10 @@ a flat menu wants:
 <% end_loop %>
 ```
 
-For a nested menu, loop `$RootMenuItems` and then `$Children` on each link.
-Swapping a flat menu over to `$RootMenuItems` changes nothing until someone
-nests a link, and prevents nested links appearing twice once they do:
+For a nested menu, descend into `$Children` on each link:
 
 ```html
-<% loop $MenuSet('YourMenuName').RootMenuItems %>
+<% loop $MenuSet('YourMenuName').MenuItems %>
 <a href="{$URL}" class="{$LinkingMode}">{$MenuTitle}</a>
 <% if $Children %>
 <ul>

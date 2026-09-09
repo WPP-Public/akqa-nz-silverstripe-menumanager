@@ -1,6 +1,14 @@
 en:
   Heyday\MenuManager\MenuAdmin:
     MENUTITLE: "Menus"
+    CURRENT_MENU: "Menu"
+    CHOOSE_MENU: "Choose a menu"
+    ADD_MENU: "Add menu"
+    DELETE_MENU: "Delete menu"
+    ADDED: "Menu added"
+    DELETED: "Menu deleted"
+    PUBLISHED_MESSAGE: "Published menu"
+    UNPUBLISHED_MESSAGE: "Unpublished menu"
   Heyday\MenuManager\MenuSet:
     SINGULARNAME: "Menu Set"
     PLURALNAME: "Menu Sets"
@@ -8,7 +16,20 @@ en:
       one: "A Menu Set"
       other: "{count} Menu Sets"
     DB_Name: "Name"
-    DB_Name_Description: "This field can't be changed once set"
+    DB_Name_Description: "The reference templates use, as in $MenuSet('MainMenu'). Spaces are removed, and it cannot be changed once the menu is saved."
+    DB_Name_Locked: "The reference templates use. It cannot be changed once the menu is saved."
+    DB_Title: "Title"
+    DB_Title_Description: "What this menu is called in the CMS. Safe to change at any time."
+    DB_Items: "Items"
+    NameLocked: 'The menu "{name}" is required by this site, so its name cannot be changed'
+    UNTITLED: "Untitled menu"
+    DRAFT: "draft"
+    NEW_SET: "New menu"
+    HISTORY: "History"
+    SAVE: "Save"
+    PUBLISH: "Publish menu"
+    PUBLISHED: "Published"
+    UNPUBLISH: "Unpublish"
     ManageMenuSets: "Manage Menu Sets"
     AlreadyExists: 'A Menu Set with the Name "{name}" already exists'
   Heyday\MenuManager\MenuItem:
@@ -28,5 +49,11 @@ en:
     DB_Link: "URL"
     DB_Link_Description: "Enter a full URL to link to another website."
     DB_IsNewWindow: "Open in a new tab?"
+    DB_Anchor: "Anchor"
+    DB_File: "File"
+    NEW_ITEM: "New menu item"
+    NewTabBadge: "New tab"
+    NoLinkBadge: "No link set"
+    HISTORY: "History"
     ManageMenuItems: "Manage Menu Items"
 

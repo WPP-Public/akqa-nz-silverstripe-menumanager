@@ -29,6 +29,58 @@ class MenuAdminControllerTest extends FunctionalTest
         $this->assertStringContainsString(MenuItemTreeSource::KEY, $body);
     }
 
+    /**
+     * Without cms-tabset and the CMS tab template, the tabs render as a bare strip inside the
+     * form instead of in the section header.
+     */
+    public function testTabsUseTheCmsTabset(): void
+    {
+        $this->logInWithPermission(['ADMIN']);
+
+        $body = (string) $this->get('admin/menu-manager')->getBody();
+
+        $this->assertMatchesRegularExpression('/class="[^"]*cms-tabset[^"]*"/', $body);
+        $this->assertStringNotContainsString('ss-tabset field CompositeField tabset', $body);
+        $this->assertStringContainsString('id="Root_Settings"', $body);
+        $this->assertStringContainsString('id="Root_History"', $body);
+    }
+
+    /**
+     * A label column would narrow the tree, which needs the full width of the panel.
+     */
+    public function testTheTreeHasNoLabelColumn(): void
+    {
+        $this->logInWithPermission(['ADMIN']);
+
+        $body = (string) $this->get('admin/menu-manager')->getBody();
+
+        $this->assertStringContainsString(
+            'id="Form_EditForm_MenuItems_Holder" class="form-group field treefield form-group--no-label"',
+            $body
+        );
+    }
+
+    public function testTheMenuPickerIsRendered(): void
+    {
+        $this->logInWithPermission(['ADMIN']);
+
+        $body = (string) $this->get('admin/menu-manager')->getBody();
+
+        $this->assertStringContainsString('menu-admin__selector', $body);
+        $this->assertStringContainsString('data-menu-admin-link', $body);
+    }
+
+    public function testEveryActionIsOffered(): void
+    {
+        $this->logInWithPermission(['ADMIN']);
+
+        $body = (string) $this->get('admin/menu-manager')->getBody();
+
+        foreach (['action_save', 'action_publish', 'action_addMenuSet', 'action_delete'] as $action) {
+            $this->assertStringContainsString($action, $body);
+        }
+    }
+
     public function testTreeEndpointReturnsTheLinksOfOneMenu(): void
     {
         $this->logInWithPermission(['ADMIN']);

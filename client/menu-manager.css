@@ -1,43 +1,38 @@
 /**
  * Menus section styling.
  *
- * The tree needs the full width of the panel. The CMS field holder is sized for a label on the
- * left and a single control on the right, which squeezes the tree and its edit panel into about
- * half the available space.
- *
- * Both the React form markup (form__field-holder) and the server rendered fallback
- * (middleColumn) are covered, because the CMS uses each in different places.
+ * Only the tree is widened. Ordinary fields keep the CMS layout of a label beside its control,
+ * because forcing every field holder to full width collapses the label column.
  */
-.MenuAdmin .form__field-holder,
-.MenuAdmin .field .middleColumn {
+.MenuAdmin .field.treefield .form__field-holder,
+.MenuAdmin .field.treefield .middleColumn {
     max-width: none;
-    flex-basis: 100%;
     width: 100%;
+    flex-basis: 100%;
     margin-left: 0;
 }
 
-.MenuAdmin .treefield .form__field-label,
-.MenuAdmin .field.treefield > label {
-    display: none;
+.MenuAdmin .field.treefield {
+    width: 100%;
+    max-width: none;
 }
 
-.MenuAdmin .treefield,
+/* The tree fills the panel, so it does not need its own scroll area */
 .MenuAdmin .tree-field {
     width: 100%;
 }
 
-/* Give the tree room to breathe now that it is not competing with a label column */
 .MenuAdmin .tree-field__tree {
     max-height: none;
 }
 
 /* The menu picker reads as a heading control rather than an ordinary form field */
 .MenuAdmin .menu-admin__selector {
-    max-width: 26rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
 }
 
-.MenuAdmin .menu-admin__selector select,
-.MenuAdmin select.menu-admin__selector {
+.MenuAdmin select.menu-admin__selector,
+.MenuAdmin .menu-admin__selector select {
+    max-width: 26rem;
     font-weight: 600;
 }

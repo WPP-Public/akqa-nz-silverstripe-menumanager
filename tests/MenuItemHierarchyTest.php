@@ -29,18 +29,18 @@ class MenuItemHierarchyTest extends SapphireTest
         return $child;
     }
 
-    public function testRootMenuItemsExcludesNestedItems(): void
+    public function testMenuItemsExcludesNestedItems(): void
     {
         $set = $this->objFromFixture(MenuSet::class, 'header');
 
-        $this->assertCount(3, $set->getRootMenuItems());
+        $this->assertCount(3, $set->MenuItems());
 
         $this->nest('header-2', 'header-1');
 
         $set = MenuSet::get()->byID($set->ID);
 
-        $this->assertCount(3, $set->MenuItems(), 'The set still owns every item');
-        $this->assertCount(2, $set->getRootMenuItems(), 'Nested items drop out of the top level');
+        $this->assertCount(2, $set->MenuItems(), 'Nested items drop out of the top level');
+        $this->assertCount(3, $set->getAllMenuItems(), 'The menu still owns every item');
     }
 
     public function testChildItemsAreReturnedInMenuOrder(): void

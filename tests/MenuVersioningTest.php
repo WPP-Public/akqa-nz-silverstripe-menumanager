@@ -83,6 +83,26 @@ class MenuVersioningTest extends SapphireTest
         $this->assertCount(3, $liveItems, 'The links are published with the menu that owns them');
     }
 
+    public function testPublishingReachesNestedLinks(): void
+    {
+        $parent = $this->objFromFixture(MenuItem::class, 'header-1');
+        $child = $this->objFromFixture(MenuItem::class, 'header-2');
+        $child->ParentItemID = $parent->ID;
+        $child->write();
+
+        $grandchild = $this->objFromFixture(MenuItem::class, 'header-3');
+        $grandchild->ParentItemID = $child->ID;
+        $grandchild->write();
+
+        $set = $this->publishHeader();
+
+        $live = Versioned::get_by_stage(MenuItem::class, Versioned::LIVE)
+            ->filter('MenuSetID', $set->ID);
+
+        $this->assertCount(3, $live, 'Publishing a menu reaches links at every level');
+        $this->assertFalse($set->hasDraftChanges());
+    }
+
     public function testAddingALinkIsADraftChange(): void
     {
         $set = $this->publishHeader();
@@ -167,7 +187,7 @@ class MenuVersioningTest extends SapphireTest
         $this->assertFalse(MenuSet::get()->byID($set->ID)->isPublished());
     }
 
-    public function testAddingAMenuCreatesADraftWithAUniqueName(): void
+    public function testAddingAMenuLeavesTheNameForTheEditorToChoose(): void
     {
         $admin = $this->admin();
         $before = MenuSet::get()->count();
@@ -177,8 +197,29 @@ class MenuVersioningTest extends SapphireTest
 
         $this->assertSame($before + 2, MenuSet::get()->count());
 
-        $names = MenuSet::get()->column('Name');
-        $this->assertSame(count($names), count(array_unique($names)));
+        $added = MenuSet::get()->sort('ID', 'DESC')->first();
+
+        $this->assertSame('New menu', $added->Title);
+        $this->assertEmpty($added->Name, 'The reference name is chosen by the editor, not generated');
+        $this->assertFalse(
+            $added->getCMSFields()->dataFieldByName('Name')->isReadonly(),
+            'A menu without a name yet can still be named'
+        );
+    }
+
+    public function testTheNameLocksOnceItIsSet(): void
+    {
+        $admin = $this->admin();
+        $admin->addMenuSet([], Form::create($admin, 'EditForm'));
+
+        $set = MenuSet::get()->sort('ID', 'DESC')->first();
+        $set->Name = 'Sidebar Menu';
+        $set->write();
+
+        $set = MenuSet::get()->byID($set->ID);
+
+        $this->assertSame('SidebarMenu', $set->Name, 'Spaces are removed from the reference');
+        $this->assertTrue($set->getCMSFields()->dataFieldByName('Name')->isReadonly());
     }
 
     public function testDeletingAPublishedMenuArchivesIt(): void
@@ -186,7 +227,7 @@ class MenuVersioningTest extends SapphireTest
         $set = $this->publishHeader();
         $admin = $this->admin(['MenuSetID' => (string) $set->ID]);
 
-        $admin->deleteMenuSet([], Form::create($admin, 'EditForm'));
+        $admin->delete(['ID' => $set->ID], Form::create($admin, 'EditForm'));
 
         $this->assertNull(MenuSet::get()->byID($set->ID));
         $this->assertCount(

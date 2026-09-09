@@ -39,12 +39,83 @@ class MenuSetTest extends SapphireTest
         $fields = $menu->getCMSFields();
 
         $this->assertInstanceOf(TreeField::class, $fields->dataFieldByName('MenuItems'));
-        $this->assertNull($fields->dataFieldByName('Name'));
+
+        // The name is the reference templates use, so it is readonly once the menu exists
+        $name = $fields->dataFieldByName('Name');
+        $this->assertNotNull($name);
+        $this->assertTrue($name->isReadonly());
+        $this->assertNotEmpty($name->getDescription());
+
+        // The editor facing title stays editable
+        $this->assertInstanceOf(TextField::class, $fields->dataFieldByName('Title'));
+        $this->assertFalse($fields->dataFieldByName('Title')->isReadonly());
 
         $this->assertInstanceOf(
             TextField::class,
             MenuSet::create()->getCMSFields()->dataFieldByName('Name')
         );
+    }
+
+    public function testNameHasSpacesRemoved(): void
+    {
+        $set = MenuSet::create();
+        $set->Name = 'Main Menu With Spaces';
+        $set->write();
+
+        $this->assertSame('MainMenuWithSpaces', MenuSet::get()->byID($set->ID)->Name);
+    }
+
+    public function testTitleIsSeparateFromNameAndEditable(): void
+    {
+        $set = MenuSet::create();
+        $set->Name = 'FooterMenu9';
+        $set->Title = 'Footer, small print';
+        $set->write();
+
+        $set = MenuSet::get()->byID($set->ID);
+
+        $this->assertSame('FooterMenu9', $set->Name);
+        $this->assertSame('Footer, small print', $set->Title);
+        $this->assertSame('Footer, small print', $set->getTitle());
+    }
+
+    public function testTitleFallsBackToTheName(): void
+    {
+        $set = MenuSet::create();
+        $set->Name = 'NoTitleHere';
+        $set->write();
+
+        $this->assertSame('NoTitleHere', MenuSet::get()->byID($set->ID)->getTitle());
+    }
+
+    public function testADefaultMenuCannotBeRenamed(): void
+    {
+        Config::modify()->set(MenuSet::class, 'default_sets', ['Header']);
+
+        $set = $this->objFromFixture(MenuSet::class, 'header');
+        $set->Name = 'SomethingElse';
+        $result = $set->validate();
+
+        $this->assertFalse($result->isValid());
+        $this->assertStringContainsString('cannot be changed', $result->getMessages()[0]['message']);
+    }
+
+    public function testADefaultMenuCanStillBeRetitled(): void
+    {
+        Config::modify()->set(MenuSet::class, 'default_sets', ['Header']);
+
+        $set = $this->objFromFixture(MenuSet::class, 'header');
+        $set->Title = 'Top navigation';
+
+        $this->assertTrue($set->validate()->isValid());
+    }
+
+    public function testANonDefaultMenuCanBeRenamed(): void
+    {
+        $set = $this->objFromFixture(MenuSet::class, 'footer');
+        $set->Name = 'Renamed';
+
+        $this->assertTrue($set->validate()->isValid());
     }
 
     public function testValidateWithUniqueName(): void
