@@ -70,6 +70,51 @@ class MenuAdminControllerTest extends FunctionalTest
         $this->assertStringContainsString('data-menu-admin-link', $body);
     }
 
+    /**
+     * A relative link here resolves against the section's own URL, so changing the picker lands
+     * somewhere that redirects straight back and the section appears not to react.
+     */
+    public function testThePickerLinksToAnAbsolutePath(): void
+    {
+        $this->logInWithPermission(['ADMIN']);
+
+        $body = (string) $this->get('admin/menu-manager')->getBody();
+
+        $this->assertMatchesRegularExpression(
+            '#data-menu-admin-link="/[^"]*menu-manager"#',
+            $body
+        );
+    }
+
+    /**
+     * Otherwise the CMS treats switching menu as an unsaved edit and warns on every change.
+     */
+    public function testThePickerIsExcludedFromChangeTracking(): void
+    {
+        $this->logInWithPermission(['ADMIN']);
+
+        $body = (string) $this->get('admin/menu-manager')->getBody();
+
+        $this->assertMatchesRegularExpression(
+            '#<select name="MenuSetID"[^>]*class="[^"]*no-change-track#',
+            $body
+        );
+    }
+
+    public function testChangingTheMenuOpensThatMenu(): void
+    {
+        $this->logInWithPermission(['ADMIN']);
+
+        $footer = $this->objFromFixture(MenuSet::class, 'footer');
+        $body = (string) $this->get('admin/menu-manager?MenuSetID=' . $footer->ID)->getBody();
+
+        $this->assertStringContainsString(
+            'data-scope-id="' . $footer->ID . '"',
+            $body,
+            'The tree reloads scoped to the menu named in the query string'
+        );
+    }
+
     public function testEveryActionIsOffered(): void
     {
         $this->logInWithPermission(['ADMIN']);

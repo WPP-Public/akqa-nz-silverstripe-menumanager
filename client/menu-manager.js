@@ -58,21 +58,26 @@
             return;
         }
 
-        const selector = target.matches("select")
-            ? target.closest(".menu-admin__selector") ||
-              (target.classList.contains("menu-admin__selector") ? target : null)
-            : null;
-
-        if (selector && target.value) {
-            const link =
-                (target.closest("[data-menu-admin-link]") || {}).getAttribute
-                    ? target.closest("[data-menu-admin-link]").getAttribute("data-menu-admin-link")
-                    : null;
-
-            window.location.href = `${link || window.location.pathname}?MenuSetID=${encodeURIComponent(
-                target.value
-            )}`;
+        if (!target.matches("select")) {
+            return;
         }
+
+        const selector = target.closest(".menu-admin__selector");
+
+        if (!selector || !target.value) {
+            return;
+        }
+
+        const source = target.closest("[data-menu-admin-link]");
+        const base = source
+            ? source.getAttribute("data-menu-admin-link")
+            : window.location.pathname;
+
+        // Resolved against the current page, so a relative base still lands in the right place
+        const url = new window.URL(base, window.location.href);
+        url.searchParams.set("MenuSetID", target.value);
+
+        window.location.assign(url.toString());
     });
 
     document.addEventListener("DOMContentLoaded", () => {

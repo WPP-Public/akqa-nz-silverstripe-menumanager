@@ -4,6 +4,8 @@ namespace Heyday\MenuManager;
 
 use SilverStripe\Admin\SingleRecordAdmin;
 use SilverStripe\Control\Cookie;
+use SilverStripe\Control\Controller;
+use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\Form;
@@ -146,8 +148,17 @@ class MenuAdmin extends SingleRecordAdmin
             $this->currentRecordID()
         );
 
-        $field->addExtraClass('menu-admin__selector');
-        $field->setAttribute('data-menu-admin-link', $this->Link());
+        // no-change-track keeps the CMS from treating a menu switch as an unsaved edit and
+        // warning the member every time they change menu
+        $field->addExtraClass('menu-admin__selector no-change-track');
+
+        // An absolute path, because the browser would otherwise resolve a relative admin link
+        // against the section's own URL and land somewhere that redirects straight back. A path
+        // rather than a full URL, so it does not depend on the base URL being configured.
+        $field->setAttribute(
+            'data-menu-admin-link',
+            Controller::join_links(Director::baseURL(), $this->Link())
+        );
         $field->setEmptyString(_t(__CLASS__ . '.CHOOSE_MENU', 'Choose a menu'));
 
         return $field;
