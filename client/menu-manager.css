@@ -129,10 +129,3 @@
     color: var(--text-muted, #6c757d);
 }
 
-.MenuAdmin .menu-admin__back {
-    margin-bottom: 0.75rem;
-}
-
-.MenuAdmin .menu-admin__back a::before {
-    margin-inline-end: 0.25rem;
-}

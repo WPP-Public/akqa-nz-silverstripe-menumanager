@@ -75,11 +75,40 @@ class MenuAdminControllerTest extends FunctionalTest
         $this->assertStringContainsString('data-scope-id="' . $footer->ID . '"', $body);
     }
 
-    public function testOpeningAMenuOffersAWayBack(): void
+    /**
+     * The way back belongs beside the section's other crumbs in the header, not in the panel the
+     * tree scrolls in.
+     */
+    public function testOpeningAMenuOffersAWayBackInTheBreadcrumbs(): void
     {
+        $header = $this->objFromFixture(MenuSet::class, 'header');
         $body = $this->bodyFor($this->openMenuUrl());
 
-        $this->assertStringContainsString('menu-admin__back', $body);
+        // Relative, the way every other section's crumbs are, resolved by the CMS base tag
+        $this->assertMatchesRegularExpression(
+            '/<a class="cms-panel-link crumb" href="\/?admin\/menu-manager">All menus<\/a>/',
+            $this->breadcrumbsIn($body)
+        );
+
+        $this->assertStringContainsString($header->Title, $this->breadcrumbsIn($body));
+        $this->assertStringNotContainsString('menu-admin__back', $body);
+    }
+
+    /**
+     * The markup of the header's breadcrumbs, so an assertion cannot be satisfied by something
+     * elsewhere on the page.
+     */
+    private function breadcrumbsIn(string $body): string
+    {
+        preg_match(
+            '/<div class="breadcrumbs-wrapper.*?<\/div>/s',
+            $body,
+            $matches
+        );
+
+        $this->assertNotEmpty($matches, 'The header has no breadcrumbs');
+
+        return $matches[0];
     }
 
     /**

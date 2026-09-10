@@ -121,12 +121,29 @@ class MenuAdminTest extends SapphireTest
         $this->assertSame($footer->ID, (int) $tree->getScopeID());
     }
 
-    public function testOpeningAMenuOffersAWayBack(): void
+    public function testOpeningAMenuOffersAWayBackInTheBreadcrumbs(): void
     {
         $footer = $this->objFromFixture(MenuSet::class, 'footer');
-        $fields = $this->makeAdmin(['MenuSetID' => (string) $footer->ID])->getEditForm()->Fields();
+        $admin = $this->makeAdmin(['MenuSetID' => (string) $footer->ID]);
 
-        $this->assertNotNull($fields->fieldByName('BackToMenus'));
+        $crumbs = $admin->Breadcrumbs();
+
+        $this->assertCount(2, $crumbs);
+        $this->assertSame('All menus', $crumbs->first()->Title);
+        $this->assertSame($admin->Link(), $crumbs->first()->Link);
+        $this->assertSame($footer->Title, $crumbs->last()->Title);
+        $this->assertFalse($crumbs->last()->Link);
+
+        // The way back belongs in the header, not among the fields
+        $this->assertNull($admin->getEditForm()->Fields()->fieldByName('BackToMenus'));
+    }
+
+    public function testTheListOfMenusKeepsTheSectionCrumb(): void
+    {
+        $crumbs = $this->makeAdmin()->Breadcrumbs();
+
+        $this->assertCount(1, $crumbs);
+        $this->assertSame('Menus', $crumbs->first()->Title);
     }
 
     public function testAnUnknownMenuInTheRequestFallsBackToTheList(): void

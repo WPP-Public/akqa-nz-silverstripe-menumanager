@@ -289,25 +289,31 @@ class MenuVersioningTest extends SapphireTest
         );
     }
 
-    public function testHistoryIsAvailableForMenusAndLinks(): void
+    public function testHistoryIsAvailableForAMenu(): void
     {
-        $setFields = $this->header()->getCMSFields();
-        $itemFields = $this->objFromFixture(MenuItem::class, 'header-1')->getCMSFields();
+        $fields = $this->header()->getCMSFields();
 
         $this->assertInstanceOf(
             HistoryViewerField::class,
-            $setFields->dataFieldByName('MenuSetHistory')
-        );
-        $this->assertInstanceOf(
-            HistoryViewerField::class,
-            $itemFields->dataFieldByName('MenuItemHistory')
+            $fields->dataFieldByName('MenuSetHistory')
         );
     }
 
-    public function testUnsavedRecordsHaveNoHistoryTab(): void
+    /**
+     * A link is edited in a narrow panel beside the tree, which is no place for a history viewer.
+     * The menu's own History tab covers its links, since publishing is per menu.
+     */
+    public function testALinkHasNoHistoryTab(): void
+    {
+        $fields = $this->objFromFixture(MenuItem::class, 'header-1')->getCMSFields();
+
+        $this->assertNull($fields->dataFieldByName('MenuItemHistory'));
+        $this->assertNull($fields->fieldByName('Root.History'));
+    }
+
+    public function testAnUnsavedMenuHasNoHistoryTab(): void
     {
         $this->assertNull(MenuSet::create()->getCMSFields()->dataFieldByName('MenuSetHistory'));
-        $this->assertNull(MenuItem::create()->getCMSFields()->dataFieldByName('MenuItemHistory'));
     }
 
     public function testTheMenuPickerMarksDrafts(): void

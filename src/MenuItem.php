@@ -3,7 +3,6 @@
 namespace Heyday\MenuManager;
 
 use Akqa\SilverStripe\TreeField\Contracts\TreeNodeProvider;
-use SilverStripe\VersionedAdmin\Forms\HistoryViewerField;
 use SilverStripe\AssetAdmin\Forms\UploadField;
 use SilverStripe\Assets\File;
 use SilverStripe\CMS\Model\SiteTree;
@@ -226,28 +225,9 @@ class MenuItem extends DataObject implements PermissionProvider, TreeNodeProvide
             ]
         );
 
-        $this->addHistoryTab($fields);
-
         $this->extend('updateCMSFields', $fields);
 
         return $fields;
-    }
-
-
-    /**
-     * Who changed this record and when, with the option to roll back.
-     */
-    protected function addHistoryTab(FieldList $fields): void
-    {
-        if (!$this->isInDB() || !class_exists(HistoryViewerField::class)) {
-            return;
-        }
-
-        $fields->addFieldToTab(
-            'Root.History',
-            HistoryViewerField::create('MenuItemHistory')
-                ->setTitle(_t(__CLASS__ . '.HISTORY', 'History'))
-        );
     }
 
 

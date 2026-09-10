@@ -11,6 +11,7 @@ use SilverStripe\Forms\Form;
 use SilverStripe\Forms\FormAction;
 use SilverStripe\Forms\HiddenField;
 use SilverStripe\Forms\LiteralField;
+use SilverStripe\Model\ArrayData;
 use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
@@ -107,11 +108,6 @@ class MenuAdmin extends SingleRecordAdmin
         if (!$form) {
             return $form;
         }
-
-        $form->Fields()->insertBefore(
-            $form->Fields()->first()?->getName() ?: '',
-            $this->getBackToMenusField()
-        );
 
         // The CMS preview watches for an input named ID in the content panel and, when the page
         // in the preview does not match it, navigates the whole CMS to that page's edit form.
@@ -223,15 +219,30 @@ class MenuAdmin extends SingleRecordAdmin
     }
 
     /**
-     * Takes the member back to the list of menus.
+     * The crumbs in the section header.
+     *
+     * With a menu open the first crumb is the way back to the list, and the menu itself is last,
+     * where the CMS shows a record's draft badge.
      */
-    protected function getBackToMenusField(): LiteralField
+    // phpcs:ignore PSR1.Methods.CamelCapsMethodName -- defined by LeftAndMain
+    public function Breadcrumbs($unlinked = false)
     {
-        return LiteralField::create('BackToMenus', sprintf(
-            '<p class="menu-admin__back"><a href="%s" class="font-icon-left-open-big">%s</a></p>',
-            Controller::join_links(Director::baseURL(), $this->Link()),
-            _t(__CLASS__ . '.ALL_MENUS', 'All menus')
-        ));
+        $set = $this->getCurrentMenuSet();
+
+        if (!$set) {
+            return parent::Breadcrumbs($unlinked);
+        }
+
+        return ArrayList::create([
+            ArrayData::create([
+                'Title' => _t(__CLASS__ . '.ALL_MENUS', 'All menus'),
+                'Link' => $unlinked ? false : $this->Link(),
+            ]),
+            ArrayData::create([
+                'Title' => $set->Title,
+                'Link' => false,
+            ]),
+        ]);
     }
 
     /**
