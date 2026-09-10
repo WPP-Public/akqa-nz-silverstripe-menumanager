@@ -1,0 +1,131 @@
+/**
+ * Menus section styling.
+ *
+ * Only the tree is widened. Ordinary fields keep the CMS layout of a label beside its control,
+ * because forcing every field holder to full width collapses the label column.
+ */
+.MenuAdmin .field.treefield .form__field-holder,
+.MenuAdmin .field.treefield .middleColumn {
+    max-width: none;
+    width: 100%;
+    flex-basis: 100%;
+    margin-left: 0;
+}
+
+.MenuAdmin .field.treefield {
+    width: 100%;
+    max-width: none;
+}
+
+/* The tree fills the panel, so it does not need its own scroll area */
+.MenuAdmin .tree-field {
+    width: 100%;
+}
+
+.MenuAdmin .tree-field__tree {
+    max-height: none;
+}
+
+/* Landing view: every menu as a tile, laid out like the Files section */
+.MenuAdmin .menu-admin__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    gap: 1rem;
+    padding: 1rem 0;
+}
+
+.MenuAdmin .menu-tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem;
+    border: 1px solid var(--border-color, #ced5e1);
+    border-radius: 6px;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+    color: inherit;
+    text-decoration: none;
+    transition: box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+}
+
+.MenuAdmin .menu-tile:hover,
+.MenuAdmin .menu-tile:focus {
+    border-color: var(--color-cms-highlight, #005a93);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.MenuAdmin .menu-tile__header {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.MenuAdmin .menu-tile__icon {
+    flex: 0 0 auto;
+    font-size: 1.25rem;
+    color: var(--color-cms-highlight, #005a93);
+}
+
+.MenuAdmin .menu-tile__heading {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.MenuAdmin .menu-tile__title {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.MenuAdmin .menu-tile__name,
+.MenuAdmin .menu-tile__count {
+    color: var(--text-muted, #6c757d);
+    font-size: 0.85em;
+}
+
+.MenuAdmin .menu-tile__description {
+    color: var(--text-muted, #6c757d);
+    font-size: 0.9em;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/*
+ * Visible only to screen readers. Defined here rather than borrowing a CMS utility class,
+ * because that name has changed between Bootstrap versions.
+ */
+.MenuAdmin .menu-tile__status-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Unpublished changes, the same orange dot the Files section uses */
+.MenuAdmin .menu-tile__status {
+    flex: 0 0 auto;
+    margin-inline-start: auto;
+    width: 0.6rem;
+    height: 0.6rem;
+    margin-top: 0.35rem;
+    border-radius: 50%;
+    background: #ff9006;
+}
+
+.MenuAdmin .menu-admin__empty {
+    padding: 1rem;
+    color: var(--text-muted, #6c757d);
+}
+

@@ -1,0 +1,7 @@
+---
+Name: menumanager-treefield
+---
+Akqa\SilverStripe\TreeField\Services\TreeSourceRegistry:
+  sources:
+    # The links of one menu set. MenuAdmin scopes this to the menu being edited.
+    menu-items: 'Heyday\MenuManager\TreeField\MenuItemTreeSource'

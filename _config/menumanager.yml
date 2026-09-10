@@ -4,3 +4,22 @@ Name: menumanager
 SilverStripe\Admin\LeftAndMain:
   extra_requirements_javascript:
     - 'heyday/silverstripe-menumanager:client/menu-manager.js'
+  extra_requirements_css:
+    - 'heyday/silverstripe-menumanager:client/menu-manager.css'
+
+# Menus are versioned: changes are made against draft and published when they are ready.
+Heyday\MenuManager\MenuSet:
+  extensions:
+    - SilverStripe\Versioned\Versioned
+  # Anyone allowed to manage menus can see unpublished ones. Without this, an editor whose only
+  # CMS permission is the Menus section could not see their own draft menus.
+  non_live_permissions:
+    - MANAGE_MENU_SETS
+    - MANAGE_MENU_ITEMS
+
+Heyday\MenuManager\MenuItem:
+  extensions:
+    - SilverStripe\Versioned\Versioned
+  non_live_permissions:
+    - MANAGE_MENU_SETS
+    - MANAGE_MENU_ITEMS
