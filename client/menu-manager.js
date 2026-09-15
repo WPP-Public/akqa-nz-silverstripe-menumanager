@@ -34,12 +34,25 @@
         show(fields.anchor, value === "internal");
     };
 
+    /**
+     * The link type a radio stands for.
+     *
+     * A React rendered OptionsetField gives every radio a value of 1 and carries the real option
+     * in an "option-val--<value>" class, so read that first and only fall back to the value for
+     * a server rendered field.
+     */
+    const linkTypeOf = (radio) => {
+        const match = (radio.className || "").match(/(?:^|\s)option-val--(\S+)/);
+
+        return match ? match[1] : radio.value;
+    };
+
     const syncLinkTypes = (root) => {
         (root || document)
             .querySelectorAll('[name="LinkType"]:checked')
             .forEach((checked) => {
                 const form = checked.closest("form") || document;
-                applyLinkType(form, checked.value);
+                applyLinkType(form, linkTypeOf(checked));
             });
     };
 
@@ -54,7 +67,7 @@
         }
 
         if (target.matches('[name="LinkType"]')) {
-            applyLinkType(target.closest("form") || document, target.value);
+            applyLinkType(target.closest("form") || document, linkTypeOf(target));
             return;
         }
 
