@@ -11,7 +11,13 @@
             `[name="${fieldName}"], [name^="${fieldName}["]`
         );
 
-        return input ? input.closest(".form-group, .field") : null;
+        if (input) {
+            return input.closest(".form-group, .field");
+        }
+
+        // Some fields have no named input until they hold a value, such as an UploadField with
+        // nothing attached, so fall back to the holder's id
+        return form.querySelector(`[id$="_${fieldName}_Holder"]`);
     };
 
     const applyLinkType = (form, value) => {
