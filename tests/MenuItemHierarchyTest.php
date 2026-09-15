@@ -109,4 +109,15 @@ class MenuItemHierarchyTest extends SapphireTest
 
         $this->assertContains('No link set', $badges);
     }
+
+    public function testTreeNodeIconMarksItemsOpeningInANewTab(): void
+    {
+        $item = MenuItem::create(['MenuTitle' => 'Same tab']);
+
+        $this->assertNull($item->getTreeNodeIcon());
+
+        $item->IsNewWindow = true;
+
+        $this->assertSame('font-icon-external-link', $item->getTreeNodeIcon());
+    }
 }

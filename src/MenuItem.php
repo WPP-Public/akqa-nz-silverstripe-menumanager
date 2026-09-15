@@ -289,11 +289,9 @@ class MenuItem extends DataObject implements PermissionProvider, TreeNodeProvide
 
     public function getTreeNodeIcon(): ?string
     {
-        return match ($this->getLinkType()) {
-            'file' => 'font-icon-image',
-            'external' => 'font-icon-external-link',
-            default => 'font-icon-link',
-        };
+        // Every menu item is a link, so an icon would only restate that. The exception is one that
+        // opens in a new tab, which is worth seeing at a glance.
+        return $this->IsNewWindow ? 'font-icon-external-link' : null;
     }
 
     /**

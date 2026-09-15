@@ -26,6 +26,11 @@
     max-height: none;
 }
 
+/* Every menu item is a link, so only show an icon when there is one, e.g. opens in a new tab */
+.MenuAdmin .tree-field__icon:not([class*="font-icon-"]) {
+    display: none;
+}
+
 /* Landing view: every menu as a tile, laid out like the Files section */
 .MenuAdmin .menu-admin__grid {
     display: grid;

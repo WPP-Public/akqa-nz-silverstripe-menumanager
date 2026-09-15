@@ -156,15 +156,17 @@ class MenuVersioningTest extends SapphireTest
         );
     }
 
-    public function testDraftStateShowsAsABadge(): void
+    public function testDraftStateShowsAsAStatusDot(): void
     {
         $set = $this->publishHeader();
         $source = MenuItemTreeSource::create()->setScopeID($set->ID);
         $new = $source->createNode(null);
 
-        $badges = array_column($source->getNodeData($new)['badges'], 'text');
+        $data = $source->getNodeData($new);
+        $badgeTexts = array_column($data['badges'], 'text');
 
-        $this->assertContains('Draft', $badges);
+        $this->assertSame('draft', $data['status']);
+        $this->assertNotContains('Draft', $badgeTexts);
     }
 
     public function testPublishActionPublishesTheMenu(): void

@@ -41,8 +41,8 @@ which this module requires.
 ### Drafts and publishing
 
 Menus are versioned. Adding, editing, moving and reordering changes the draft
-only, and the tree marks anything not yet live: draft rows are italic and carry
-a **Draft** or **Modified** badge, and the menu picker marks a menu that has
+only, and the tree marks anything not yet live: draft rows are italic and show
+an orange status dot, and the menu picker marks a menu that has
 never been published.
 
 **Publish menu** sends the menu and all of its links live in one go.

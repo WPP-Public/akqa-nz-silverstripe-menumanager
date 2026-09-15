@@ -32,7 +32,7 @@ class MenuItemTreeSource extends DataObjectTreeSource
      */
     private static int $max_depth = 3;
 
-    private static string $default_icon = 'font-icon-link';
+    private static string $default_icon = '';
 
     /**
      * Give a brand new item a label, so the tree has something to show before the member has
