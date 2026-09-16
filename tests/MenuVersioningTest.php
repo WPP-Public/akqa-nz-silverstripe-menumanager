@@ -8,6 +8,7 @@ use Heyday\MenuManager\MenuSet;
 use Heyday\MenuManager\TreeField\MenuItemTreeSource;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Control\Session;
+use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Forms\Form;
@@ -187,6 +188,29 @@ class MenuVersioningTest extends SapphireTest
         $admin->unpublish([], Form::create($admin, 'EditForm'));
 
         $this->assertFalse(MenuSet::get()->byID($set->ID)->isPublished());
+    }
+
+    public function testADefaultSetCannotBeUnpublished(): void
+    {
+        Config::modify()->set(MenuSet::class, 'default_sets', ['Header']);
+        $set = $this->publishHeader();
+
+        // Not even ADMIN, which Versioned would otherwise always let through
+        $this->assertFalse($set->canUnpublish());
+        $this->assertFalse($set->canDelete());
+        $this->assertNull($set->getCMSActions()->fieldByName('action_unpublish'));
+        $this->assertNull($set->getCMSActions()->fieldByName('action_delete'));
+
+        $admin = $this->admin(['MenuSetID' => (string) $set->ID]);
+
+        try {
+            $admin->unpublish([], Form::create($admin, 'EditForm'));
+            $this->fail('Unpublishing a default set should be refused');
+        } catch (\SilverStripe\Control\HTTPResponse_Exception $e) {
+            $this->assertSame(403, $e->getResponse()->getStatusCode());
+        }
+
+        $this->assertTrue(MenuSet::get()->byID($set->ID)->isPublished());
     }
 
     public function testDeleteRefusesWithoutAMenuToDelete(): void

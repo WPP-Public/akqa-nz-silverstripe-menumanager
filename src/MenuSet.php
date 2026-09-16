@@ -192,13 +192,7 @@ class MenuSet extends DataObject implements PermissionProvider, CMSPreviewable
      */
     public function canDelete($member = null): bool
     {
-        // Backwards compatibility for duplicate default sets. A menu added in the CMS has no
-        // name until the editor gives it one, so there is nothing to look up.
-        $name = static::normaliseName($this->Name);
-        $existing = $name === '' ? null : MenuManagerTemplateProvider::getMenuSet($name);
-        $isDuplicate = $existing && $existing->ID !== $this->ID;
-
-        if ($this->isDefaultSet() && !$isDuplicate) {
+        if ($this->isProtectedDefaultSet()) {
             return false;
         }
 
@@ -208,6 +202,27 @@ class MenuSet extends DataObject implements PermissionProvider, CMSPreviewable
         }
 
         return Permission::check('MANAGE_MENU_SETS');
+    }
+
+    /**
+     * A default set is referenced by name in config and templates, so it can never be taken
+     * off the live site. This overrides Versioned::canUnpublish(), which lets ADMIN through.
+     *
+     * @param mixed $member
+     * @return boolean
+     */
+    public function canUnpublish($member = null): bool
+    {
+        if ($this->isProtectedDefaultSet()) {
+            return false;
+        }
+
+        $extended = $this->extendedCan(__FUNCTION__, $member);
+        if ($extended !== null) {
+            return $extended;
+        }
+
+        return $this->canPublish($member);
     }
 
     /**
@@ -314,6 +329,23 @@ class MenuSet extends DataObject implements PermissionProvider, CMSPreviewable
         $name = static::normaliseName($this->Name);
 
         return $name !== '' && in_array($name, $this->getDefaultSetNames());
+    }
+
+
+    /**
+     * Whether this is the record backing a default set, and so cannot be deleted or unpublished.
+     * A duplicate of a default set (from before names were unique) is not protected, so it can
+     * still be cleaned up.
+     */
+    public function isProtectedDefaultSet(): bool
+    {
+        if (!$this->isDefaultSet()) {
+            return false;
+        }
+
+        $existing = MenuManagerTemplateProvider::getMenuSet(static::normaliseName($this->Name));
+
+        return !$existing || $existing->ID === $this->ID;
     }
 
 
