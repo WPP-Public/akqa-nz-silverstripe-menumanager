@@ -22,7 +22,7 @@
         }
     },
     "extra": {
-        "dev-main": "5.0.x-dev",
+        "dev-main": "6.x-dev",
         "expose": [
             "client/"
         ]
