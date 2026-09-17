@@ -48,8 +48,8 @@ class MenuItemTreeSource extends DataObjectTreeSource
     }
 
     /**
-     * Give a brand new item a label, so the tree has something to show before the member has
-     * filled the form in.
+     * Overridden to suppress the parent's default placeholder label, because MenuItem provides its
+     * own label logic once the member fills the form in.
      */
     protected function extendNewNode(DataObject $node, ?DataObject $parent): void
     {
