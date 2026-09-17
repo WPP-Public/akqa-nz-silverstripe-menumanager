@@ -2,11 +2,11 @@
 
 namespace Heyday\MenuManager\Test;
 
+use Akqa\SilverStripe\TreeField\Form\TreeField;
 use Heyday\MenuManager\MenuSet;
 use Heyday\MenuManager\MenuManagerTemplateProvider;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;
-use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\TextField;
 use SilverStripe\Core\Validation\ValidationResult;
 
@@ -38,13 +38,94 @@ class MenuSetTest extends SapphireTest
         $menu = $this->objFromFixture(MenuSet::class, 'header');
         $fields = $menu->getCMSFields();
 
-        $this->assertInstanceOf(GridField::class, $fields->dataFieldByName('MenuItems'));
-        $this->assertNull($fields->dataFieldByName('Name'));
+        $this->assertInstanceOf(TreeField::class, $fields->dataFieldByName('MenuItems'));
+
+        // A menu the site does not require can be renamed, with a warning that templates use it
+        $name = $fields->dataFieldByName('Name');
+        $this->assertNotNull($name);
+        $this->assertFalse($name->isReadonly());
+        $this->assertStringContainsString('could break', $name->getDescription());
+
+        // The editor facing title stays editable
+        $this->assertInstanceOf(TextField::class, $fields->dataFieldByName('Title'));
+        $this->assertFalse($fields->dataFieldByName('Title')->isReadonly());
 
         $this->assertInstanceOf(
             TextField::class,
             MenuSet::create()->getCMSFields()->dataFieldByName('Name')
         );
+    }
+
+    public function testNameHasSpacesRemoved(): void
+    {
+        $set = MenuSet::create();
+        $set->Name = 'Main Menu With Spaces';
+        $set->write();
+
+        $this->assertSame('MainMenuWithSpaces', MenuSet::get()->byID($set->ID)->Name);
+    }
+
+    public function testTitleIsSeparateFromNameAndEditable(): void
+    {
+        $set = MenuSet::create();
+        $set->Name = 'FooterMenu9';
+        $set->Title = 'Footer, small print';
+        $set->write();
+
+        $set = MenuSet::get()->byID($set->ID);
+
+        $this->assertSame('FooterMenu9', $set->Name);
+        $this->assertSame('Footer, small print', $set->Title);
+        $this->assertSame('Footer, small print', $set->getTitle());
+    }
+
+    public function testTitleFallsBackToTheName(): void
+    {
+        $set = MenuSet::create();
+        $set->Name = 'NoTitleHere';
+        $set->write();
+
+        $this->assertSame('NoTitleHere', MenuSet::get()->byID($set->ID)->getTitle());
+    }
+
+    public function testADefaultMenuHasItsNameLocked(): void
+    {
+        Config::modify()->set(MenuSet::class, 'default_sets', ['Header']);
+
+        $name = $this->objFromFixture(MenuSet::class, 'header')->getCMSFields()->dataFieldByName('Name');
+
+        $this->assertTrue($name->isReadonly());
+        $this->assertStringContainsString('required by the site', $name->getDescription());
+    }
+
+    public function testADefaultMenuCannotBeRenamed(): void
+    {
+        Config::modify()->set(MenuSet::class, 'default_sets', ['Header']);
+
+        $set = $this->objFromFixture(MenuSet::class, 'header');
+        $set->Name = 'SomethingElse';
+        $result = $set->validate();
+
+        $this->assertFalse($result->isValid());
+        $this->assertStringContainsString('cannot be changed', $result->getMessages()[0]['message']);
+    }
+
+    public function testADefaultMenuCanStillBeRetitled(): void
+    {
+        Config::modify()->set(MenuSet::class, 'default_sets', ['Header']);
+
+        $set = $this->objFromFixture(MenuSet::class, 'header');
+        $set->Title = 'Top navigation';
+
+        $this->assertTrue($set->validate()->isValid());
+    }
+
+    public function testANonDefaultMenuCanBeRenamed(): void
+    {
+        $set = $this->objFromFixture(MenuSet::class, 'footer');
+        $set->Name = 'Renamed';
+
+        $this->assertTrue($set->validate()->isValid());
     }
 
     public function testValidateWithUniqueName(): void
@@ -138,6 +219,69 @@ class MenuSetTest extends SapphireTest
 
         // Should be valid as the comparison is case-sensitive
         $this->assertTrue($result->isValid());
+    }
+
+    public function testABlankNameIsGeneratedFromTheTitle(): void
+    {
+        $set = MenuSet::create();
+        $set->Title = 'Footer - quick links!';
+        $set->write();
+
+        $this->assertSame('FooterQuickLinks', MenuSet::get()->byID($set->ID)->Name);
+    }
+
+    public function testAGeneratedNameIsUnique(): void
+    {
+        // Fixture "Header" exists, and lookups by name ignore case
+        $set = MenuSet::create();
+        $set->Title = 'header';
+        $set->write();
+
+        $this->assertSame('Header2', $set->Name);
+
+        $another = MenuSet::create();
+        $another->Title = 'Header';
+        $another->write();
+
+        $this->assertSame('Header3', $another->Name);
+    }
+
+    public function testAMenuWithoutATitleStillGetsAName(): void
+    {
+        $set = MenuSet::create();
+        $set->write();
+
+        $this->assertSame('Menu', $set->Name);
+        $this->assertSame('Menu', $set->getTitle());
+    }
+
+    public function testResavingKeepsAGeneratedName(): void
+    {
+        $set = MenuSet::create();
+        $set->Title = 'Sidebar';
+        $set->write();
+
+        $set->Title = 'Something else';
+        $set->write();
+
+        $this->assertSame('Sidebar', MenuSet::get()->byID($set->ID)->Name);
+    }
+
+    public function testNamesAreUniqueOnlyWithinTheScopeExtensionsGive(): void
+    {
+        MenuSet::add_extension(MenuSetNameScopeTestExtension::class);
+
+        try {
+            // Nothing else shares names with this menu, so the fixture's "Header" is no clash
+            $set = MenuSet::create();
+            $set->Title = 'Header';
+            $set->write();
+
+            $this->assertSame('Header', $set->Name);
+            $this->assertTrue($set->validate()->isValid());
+        } finally {
+            MenuSet::remove_extension(MenuSetNameScopeTestExtension::class);
+        }
     }
 
     /**

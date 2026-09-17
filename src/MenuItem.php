@@ -2,9 +2,11 @@
 
 namespace Heyday\MenuManager;
 
+use Akqa\SilverStripe\TreeField\Contracts\TreeNodeProvider;
 use SilverStripe\AssetAdmin\Forms\UploadField;
 use SilverStripe\Assets\File;
 use SilverStripe\CMS\Model\SiteTree;
+use SilverStripe\Control\Controller;
 use SilverStripe\Forms\CheckboxField;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\OptionsetField;
@@ -12,14 +14,17 @@ use SilverStripe\Forms\TabSet;
 use SilverStripe\Forms\TextField;
 use SilverStripe\Forms\TreeDropdownField;
 use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\HasManyList;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
 
 /**
  * Class MenuItem
  */
-class MenuItem extends DataObject implements PermissionProvider
+class MenuItem extends DataObject implements PermissionProvider, TreeNodeProvider
 {
+    use EnsuresVersion;
+
     /**
      * @var string
      */
@@ -40,6 +45,39 @@ class MenuItem extends DataObject implements PermissionProvider
         'Page' => SiteTree::class, // page the MenuItem refers to
         'MenuSet' => MenuSet::class,
         'File' => File::class,
+        // Nesting. Named ParentItem rather than Parent because getParent() already returns the
+        // MenuSet this item belongs to.
+        'ParentItem' => MenuItem::class,
+    ];
+
+    /**
+     * @var array
+     */
+    private static array $has_many = [
+        'Children' => MenuItem::class . '.ParentItem',
+    ];
+
+    /**
+     * @var array
+     */
+    private static array $cascade_deletes = [
+        'Children',
+    ];
+
+    /**
+     * Publishing an item publishes everything nested under it.
+     *
+     * @var array
+     */
+    private static array $owns = [
+        'Children',
+    ];
+
+    /**
+     * @var array
+     */
+    private static array $cascade_duplicates = [
+        'Children',
     ];
 
     /**
@@ -167,10 +205,13 @@ class MenuItem extends DataObject implements PermissionProvider
                         'Leave blank if you wish to manually specify the URL below.'
                     )
                 ),
+                // Use getField() so __get() does not fall through to Page::Link() and
+                // pre-fill this with the internal page URL when editing.
                 TextField::create(
                     'Link',
                     _t(__CLASS__ . '.DB_Link', 'URL')
-                )->setDescription(
+                )->setValue($this->getField('Link'))
+                ->setDescription(
                     _t(
                         __CLASS__ . '.DB_Link_Description',
                         'Enter a full URL to link to another website.'
@@ -200,6 +241,126 @@ class MenuItem extends DataObject implements PermissionProvider
     }
 
     /**
+     * Direct children of this item, in menu order.
+     *
+     * @return HasManyList<MenuItem>
+     */
+    public function getChildItems(): HasManyList
+    {
+        return $this->Children()->sort(['Sort' => 'ASC', 'ID' => 'ASC']);
+    }
+
+    /**
+     * Whether this item has anything nested under it.
+     */
+    public function hasChildItems(): bool
+    {
+        return $this->getChildItems()->exists();
+    }
+
+    /**
+     * How deep this item sits, where a top level item is 1.
+     */
+    public function getMenuLevel(): int
+    {
+        $level = 1;
+        $parent = $this->ParentItem();
+        $seen = [$this->ID => true];
+
+        while ($parent && $parent->exists() && !isset($seen[$parent->ID]) && $level < 20) {
+            $seen[$parent->ID] = true;
+            $level++;
+            $parent = $parent->ParentItem();
+        }
+
+        return $level;
+    }
+
+    /**
+     * The getTreeNode* methods below describe this item to the TreeField in the CMS.
+     */
+    public function getTreeNodeTitle(): string
+    {
+        return (string) $this->getTitle();
+    }
+
+    public function getTreeNodeSubtitle(): ?string
+    {
+        $url = $this->getURL();
+
+        return $url !== '' ? $url : null;
+    }
+
+    public function getTreeNodeIcon(): ?string
+    {
+        // Every menu item is a link, so an icon would only restate that. The exception is one that
+        // opens in a new tab, which is worth seeing at a glance.
+        return $this->IsNewWindow ? 'font-icon-external-link' : null;
+    }
+
+    /**
+     * @return array<int, array{text: string, type: string}>
+     */
+    public function getTreeNodeBadges(): array
+    {
+        $badges = [];
+
+        if ($this->IsNewWindow) {
+            $badges[] = [
+                'text' => _t(__CLASS__ . '.NewTabBadge', 'New tab'),
+                'type' => 'secondary',
+            ];
+        }
+
+        // Read the raw columns - __get() falls back to the linked page when a field is empty,
+        // which would make an item with no link of its own look like it has one
+        $hasOwnLink = (int) $this->getField('PageID')
+            || (int) $this->getField('FileID')
+            || (string) $this->getField('Link') !== '';
+
+        if (!$hasOwnLink) {
+            $badges[] = [
+                'text' => _t(__CLASS__ . '.NoLinkBadge', 'No link set'),
+                'type' => 'warning',
+            ];
+        }
+
+        $this->invokeWithExtensions('updateTreeNodeBadges', $badges);
+
+        return $badges;
+    }
+
+    public function allowsTreeChildren(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Fields that must never fall through to the linked page.
+     *
+     * Versioning columns in particular: an unsaved item has no Version of its own, and answering
+     * with the page's would confuse the versioning layer.
+     *
+     * @var array
+     */
+    private static array $no_page_fallback = [
+        'ID',
+        'Version',
+        'RecordID',
+        'AuthorID',
+        'PublisherID',
+        'WasPublished',
+        'WasDeleted',
+        'WasDraft',
+        'ParentItemID',
+        'MenuSetID',
+        'Sort',
+        // Keep empty so the CMS URL field is not pre-filled with Page::Link().
+        // Resolved destinations go through getURL() / AbsoluteURL.
+        'Link',
+    ];
+
+    /**
      * Attempts to return the $field from this MenuItem
      * If $field is not found or it is not set then attempts
      * to return a similar field on the associated Page
@@ -212,7 +373,7 @@ class MenuItem extends DataObject implements PermissionProvider
     {
         $default = parent::__get($field);
 
-        if ($default || $field === 'ID') {
+        if ($default || in_array($field, static::config()->get('no_page_fallback') ?? [], true)) {
             return $default;
         } else {
             $page = $this->Page();
@@ -239,18 +400,22 @@ class MenuItem extends DataObject implements PermissionProvider
 
 
     /**
-     * Checks to see if a page has been chosen and if so sets Link to null
-     * This means that used in conjunction with the __get method above
-     * calling $menuItem->Link won't return the Link field of this MenuItem
-     * but rather call the Link method on the associated Page
+     * Keep only the destination that matches the chosen link type.
+     *
+     * The detail form always submits PageID, Link and File together (hidden fields
+     * are still posted). Without clearing the others here, switching to "external"
+     * while a page is still selected would hit the old "PageID wins" rule and wipe
+     * the URL on save.
      */
     public function onBeforeWrite()
     {
         parent::onBeforeWrite();
 
-        if ($this->PageID != 0) {
-            $this->Link = null;
-        }
+        match ($this->resolveWriteLinkType()) {
+            'external' => $this->clearNonExternalDestination(),
+            'file' => $this->clearNonFileDestination(),
+            default => $this->clearNonInternalDestination(),
+        };
 
         if ($this->Anchor) {
             // strip out any leading #s
@@ -258,15 +423,56 @@ class MenuItem extends DataObject implements PermissionProvider
         }
     }
 
+    /**
+     * Link type for this write: favour the value posted by the CMS form when present.
+     */
+    private function resolveWriteLinkType(): string
+    {
+        $posted = $this->getField('LinkType');
+
+        if (!is_string($posted) || $posted === '') {
+            $controller = Controller::curr();
+            $request = $controller ? $controller->getRequest() : null;
+            $posted = $request ? (string) $request->requestVar('LinkType') : '';
+        }
+
+        if (in_array($posted, ['internal', 'external', 'file'], true)) {
+            return $posted;
+        }
+
+        return $this->getLinkType();
+    }
+
+    private function clearNonExternalDestination(): void
+    {
+        $this->PageID = 0;
+        $this->FileID = 0;
+    }
+
+    private function clearNonFileDestination(): void
+    {
+        $this->PageID = 0;
+        $this->Link = null;
+    }
+
+    private function clearNonInternalDestination(): void
+    {
+        $this->Link = null;
+        $this->FileID = 0;
+    }
+
 
     public function getLinkType(): string
     {
-        if ($this->FileID && $this->FileID > 0) {
+        // Read raw columns — __get('Link') falls through to Page::Link() when empty.
+        if ((int) $this->getField('FileID') > 0) {
             $type = 'file';
-        } elseif ($this->PageID && $this->PageID > 0 || !$this->Link || $this->Link == '/') {
+        } elseif ((int) $this->getField('PageID') > 0) {
             $type = 'internal';
-        } else {
+        } elseif (($link = (string) $this->getField('Link')) !== '' && $link !== '/') {
             $type = 'external';
+        } else {
+            $type = 'internal';
         }
 
         $this->invokeWithExtensions('updateLinkType', $type);
@@ -317,8 +523,12 @@ class MenuItem extends DataObject implements PermissionProvider
         } elseif ($this->FileID) {
             $link = $this->File()->getURL();
         } else {
-            $link = $this->Link;
+            // Use getField() — with Link in $no_page_fallback, a blank destination
+            // must stay blank rather than falling through to a page URL.
+            $link = $this->getField('Link');
         }
+
+        $link = (string) ($link ?? '');
 
         if ($this->Anchor) {
             $link .= '#' . $this->Anchor;
@@ -326,14 +536,14 @@ class MenuItem extends DataObject implements PermissionProvider
 
         $this->extend('updateURL', $link);
 
-        return $link;
+        return (string) ($link ?? '');
     }
 
 
     public function getAbsoluteURL(): string
     {
         if ($this->PageID) {
-            $link = $this->Page()->AbsoluteLink();
+            $link = (string) ($this->Page()->AbsoluteLink() ?? '');
 
             if ($this->Anchor) {
                 $link .= '#' . $this->Anchor;
@@ -348,6 +558,12 @@ class MenuItem extends DataObject implements PermissionProvider
 
     public function asArray(): array
     {
+        $children = [];
+
+        foreach ($this->getChildItems() as $child) {
+            $children[] = $child->asArray();
+        }
+
         return [
             'id' => $this->ID,
             'label' => $this->MenuTitle,
@@ -355,6 +571,7 @@ class MenuItem extends DataObject implements PermissionProvider
             'type' => $this->getLinkType(),
             'target' => $this->IsNewWindow ? '_blank' : '_self',
             'rel' => $this->IsNewWindow ? 'noopener noreferrer' : '',
+            'children' => $children,
         ];
     }
 }

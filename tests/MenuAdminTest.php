@@ -2,29 +2,164 @@
 
 namespace Heyday\MenuManager\Test;
 
+use Akqa\SilverStripe\TreeField\Form\TreeField;
 use Heyday\MenuManager\MenuAdmin;
 use Heyday\MenuManager\MenuSet;
+use Heyday\MenuManager\TreeField\MenuItemTreeSource;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Control\Session;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
-use SilverStripe\Forms\GridField\GridField;
 
 class MenuAdminTest extends SapphireTest
 {
     protected static $fixture_file = 'MenuTest.yml';
 
-    public function testEditForm(): void
+    private function makeAdmin(array $vars = []): MenuAdmin
     {
-        $menuSetName = str_replace('\\', '-', MenuSet::class);
-        $admin = Injector::inst()->get(MenuAdmin::class);
-        $request = Injector::inst()->get(HTTPRequest::class, true, ['GET', '']);
+        $admin = Injector::inst()->create(MenuAdmin::class);
+        $request = new HTTPRequest('GET', '/admin/menu-manager', $vars);
         $request->setSession(new Session([]));
-        $request->setRouteParams(['ModelClass' => $menuSetName]);
+
+        // Extensions on the admin resolve the current request from the container
+        Injector::inst()->registerService($request, HTTPRequest::class);
+
         $admin->setRequest($request);
         $admin->doInit();
 
-        $form = $admin->getEditForm()->Fields();
-        $this->assertInstanceOf(GridField::class, $form->dataFieldByName($menuSetName));
+        return $admin;
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->logInWithPermission(['CMS_ACCESS', 'MANAGE_MENU_SETS', 'MANAGE_MENU_ITEMS']);
+    }
+
+    public function testTheSectionOpensOnTheListOfMenus(): void
+    {
+        $admin = $this->makeAdmin();
+
+        $this->assertNull($admin->getCurrentMenuSet());
+
+        $fields = $admin->getEditForm()->Fields();
+
+        $this->assertNotNull($fields->fieldByName('Menus'));
+        $this->assertNull($fields->dataFieldByName('MenuItems'));
+    }
+
+    public function testTheListShowsEveryMenu(): void
+    {
+        $html = (string) $this->makeAdmin()->getEditForm()->Fields()->fieldByName('Menus')->getContent();
+
+        $this->assertStringContainsString('menu-admin__grid', $html);
+        $this->assertSame(2, substr_count($html, 'menu-tile__title'));
+        // The fixture names lose their spaces, and the title falls back to the name
+        $this->assertStringContainsString('Header', $html);
+        $this->assertStringContainsString('Footer1', $html);
+    }
+
+    public function testATileLinksToItsMenu(): void
+    {
+        $footer = $this->objFromFixture(MenuSet::class, 'footer');
+        $html = (string) $this->makeAdmin()->getEditForm()->Fields()->fieldByName('Menus')->getContent();
+
+        $this->assertStringContainsString('MenuSetID=' . $footer->ID, $html);
+    }
+
+    public function testATileShowsTheTitleRatherThanTheName(): void
+    {
+        $set = $this->objFromFixture(MenuSet::class, 'header');
+        $set->Title = 'Main navigation';
+        $set->write();
+
+        $html = (string) $this->makeAdmin()->getEditForm()->Fields()->fieldByName('Menus')->getContent();
+
+        $this->assertStringContainsString('Main navigation', $html);
+        $this->assertStringContainsString('Header', $html, 'The reference name is shown too');
+    }
+
+    public function testATileShowsTheNumberOfLinksAndTheDescription(): void
+    {
+        $set = $this->objFromFixture(MenuSet::class, 'header');
+        $set->Description = 'The main site navigation';
+        $set->write();
+
+        $html = (string) $this->makeAdmin()->getEditForm()->Fields()->fieldByName('Menus')->getContent();
+
+        $this->assertStringContainsString('3 links', $html);
+        $this->assertStringContainsString('The main site navigation', $html);
+    }
+
+    public function testATileFlagsUnpublishedChanges(): void
+    {
+        $html = (string) $this->makeAdmin()->getEditForm()->Fields()->fieldByName('Menus')->getContent();
+
+        $this->assertStringContainsString('menu-tile--draft', $html, 'Unpublished menus are flagged');
+
+        foreach (MenuSet::get() as $set) {
+            $set->publishRecursive();
+        }
+
+        $html = (string) $this->makeAdmin()->getEditForm()->Fields()->fieldByName('Menus')->getContent();
+
+        $this->assertStringNotContainsString('menu-tile--draft', $html);
+    }
+
+    public function testOpeningAMenuShowsItsTree(): void
+    {
+        $footer = $this->objFromFixture(MenuSet::class, 'footer');
+        $admin = $this->makeAdmin(['MenuSetID' => (string) $footer->ID]);
+
+        $this->assertSame($footer->ID, $admin->getCurrentMenuSet()->ID);
+
+        $tree = $admin->getEditForm()->Fields()->dataFieldByName('MenuItems');
+
+        $this->assertInstanceOf(TreeField::class, $tree);
+        $this->assertSame(MenuItemTreeSource::KEY, $tree->getSourceKey());
+        $this->assertSame($footer->ID, (int) $tree->getScopeID());
+    }
+
+    public function testOpeningAMenuOffersAWayBackInTheBreadcrumbs(): void
+    {
+        $footer = $this->objFromFixture(MenuSet::class, 'footer');
+        $admin = $this->makeAdmin(['MenuSetID' => (string) $footer->ID]);
+
+        $crumbs = $admin->Breadcrumbs();
+
+        $this->assertCount(2, $crumbs);
+        $this->assertSame('All menus', $crumbs->first()->Title);
+        $this->assertSame($admin->Link(), $crumbs->first()->Link);
+        $this->assertSame($footer->Title, $crumbs->last()->Title);
+        $this->assertFalse($crumbs->last()->Link);
+
+        // The way back belongs in the header, not among the fields
+        $this->assertNull($admin->getEditForm()->Fields()->fieldByName('BackToMenus'));
+    }
+
+    public function testTheListOfMenusKeepsTheSectionCrumb(): void
+    {
+        $crumbs = $this->makeAdmin()->Breadcrumbs();
+
+        $this->assertCount(1, $crumbs);
+        $this->assertSame('Menus', $crumbs->first()->Title);
+    }
+
+    public function testAnUnknownMenuInTheRequestFallsBackToTheList(): void
+    {
+        $admin = $this->makeAdmin(['MenuSetID' => '999999']);
+
+        $this->assertNull($admin->getCurrentMenuSet());
+        $this->assertNotNull($admin->getEditForm()->Fields()->fieldByName('Menus'));
+    }
+
+    public function testWithoutPermissionThereIsNoList(): void
+    {
+        $this->logInWithPermission(['CMS_ACCESS']);
+
+        $html = (string) $this->makeAdmin()->getEditForm()->Fields()->fieldByName('Menus')->getContent();
+
+        $this->assertStringNotContainsString('menu-tile', $html);
     }
 }

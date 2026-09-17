@@ -69,4 +69,46 @@ class MenuItemTest extends SapphireTest
 
         $this->assertSame($item->getURL(), $item->getAbsoluteURL());
     }
+
+    public function testGetURLReturnsEmptyStringWhenNoDestinationIsSet(): void
+    {
+        $item = MenuItem::create();
+        $item->MenuTitle = 'No destination';
+
+        $this->assertSame('', $item->getURL());
+        $this->assertSame('', $item->getAbsoluteURL());
+        $this->assertNull($item->getTreeNodeSubtitle());
+    }
+
+    public function testSavingAsExternalClearsALeftoverPage(): void
+    {
+        $set = $this->objFromFixture(MenuSet::class, 'header');
+        $item = MenuItem::create();
+        $item->MenuSetID = $set->ID;
+        $item->MenuTitle = 'External after page';
+        $item->PageID = $this->objFromFixture(MenuItem::class, 'header-1')->PageID;
+        $item->Link = 'https://example.com/switch';
+        $item->LinkType = 'external';
+        $item->write();
+
+        $this->assertSame(0, (int) $item->PageID);
+        $this->assertSame('https://example.com/switch', $item->getField('Link'));
+        $this->assertSame('external', $item->getLinkType());
+    }
+
+    public function testSavingAsInternalClearsAnExternalUrl(): void
+    {
+        $set = $this->objFromFixture(MenuSet::class, 'header');
+        $item = MenuItem::create();
+        $item->MenuSetID = $set->ID;
+        $item->MenuTitle = 'Internal after url';
+        $item->PageID = $this->objFromFixture(MenuItem::class, 'header-1')->PageID;
+        $item->Link = 'https://example.com/stale';
+        $item->LinkType = 'internal';
+        $item->write();
+
+        $this->assertSame('', (string) $item->getField('Link'));
+        $this->assertGreaterThan(0, (int) $item->PageID);
+        $this->assertSame('internal', $item->getLinkType());
+    }
 }

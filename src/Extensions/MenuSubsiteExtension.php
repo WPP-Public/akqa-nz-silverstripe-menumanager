@@ -8,6 +8,7 @@ use Heyday\MenuManager\MenuSet;
 use SilverStripe\Core\Extension;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\HiddenField;
+use SilverStripe\ORM\DataList;
 
 if (
     !class_exists('\SilverStripe\Subsites\Model\Subsite') ||
@@ -25,6 +26,17 @@ class MenuSubsiteExtension extends Extension
     public function updateCMSFields(FieldList $fields)
     {
         $fields->replaceField('SubsiteID', new HiddenField('SubsiteID'));
+    }
+
+    /**
+     * Names only need to be unique within a subsite, since templates look them up there
+     */
+    public function updateMenuSetsSharingNames(DataList &$list)
+    {
+        $subsiteId = $this->owner->SubsiteID
+            ?: \SilverStripe\Subsites\State\SubsiteState::singleton()->getSubsiteId();
+
+        $list = $list->filter('SubsiteID', (int) $subsiteId);
     }
 
     public function onBeforeWrite()
