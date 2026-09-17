@@ -135,7 +135,7 @@ class MenuAdmin extends SingleRecordAdmin
             }
 
             if ($tree->hasMethod('setSelectedNodeID')) {
-                $tree->setSelectedNodeID($requestedMenuItemID);
+                $tree->setSelectedNodeID($selectedMenuItemID ?? '');
             } elseif ($selectedMenuItemID !== null) {
                 $tree->setAttribute('data-selected-id', $selectedMenuItemID);
             }
