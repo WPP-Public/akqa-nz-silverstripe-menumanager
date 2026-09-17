@@ -4,6 +4,7 @@ namespace Heyday\MenuManager;
 
 use Akqa\SilverStripe\TreeField\Form\TreeField;
 use Heyday\MenuManager\TreeField\MenuItemTreeSource;
+use InvalidArgumentException;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\FormAction;
 use SilverStripe\Forms\FormField;
@@ -80,6 +81,20 @@ class MenuSet extends DataObject implements PermissionProvider, CMSPreviewable
     private static bool $show_stage_link = true;
 
     private static bool $show_live_link = true;
+
+    /**
+     * How many levels deep a menu may go, keyed by the menu's Name. A menu that is not listed
+     * falls back to the tree's own limit, {@see MenuItemTreeSource::$max_depth}.
+     *
+     * <code>
+     * Heyday\MenuManager\MenuSet:
+     *   max_menu_depth:
+     *     FooterMenu: 2
+     * </code>
+     *
+     * @var array<string, int>
+     */
+    private static array $max_menu_depth = [];
 
     /**
      * @return array
@@ -408,6 +423,11 @@ class MenuSet extends DataObject implements PermissionProvider, CMSPreviewable
     {
         parent::requireDefaultRecords();
 
+        // Fail the build on a bad depth, rather than when someone next opens that menu
+        foreach ($this->config()->get('max_menu_depth') ?: [] as $name => $depth) {
+            static::normaliseMaxMenuDepth((string) $name, $depth);
+        }
+
         if ($this->createDefaultMenuSets()) {
             DB::alteration_message(sprintf(
                 "MenuSets created (%s)",
@@ -725,6 +745,44 @@ class MenuSet extends DataObject implements PermissionProvider, CMSPreviewable
     public function getDefaultSetNames()
     {
         return $this->config()->get('default_sets') ?: [];
+    }
+
+
+    /**
+     * How many levels deep this menu may go, where 1 allows top level links only. Null when
+     * max_menu_depth does not mention this menu.
+     *
+     * @throws InvalidArgumentException when the configured depth is not a whole number of 1 or more
+     */
+    public function getMaxMenuDepth(): ?int
+    {
+        $name = static::normaliseName($this->Name);
+        $depths = $this->config()->get('max_menu_depth') ?: [];
+
+        if ($name === '' || !array_key_exists($name, $depths)) {
+            return null;
+        }
+
+        return static::normaliseMaxMenuDepth($name, $depths[$name]);
+    }
+
+
+    /**
+     * A configured depth as an integer, refusing anything that would leave a menu unusable or
+     * unlimited. 0 means "no limit" to the tree, so it is rejected rather than passed through.
+     */
+    public static function normaliseMaxMenuDepth(string $name, mixed $depth): int
+    {
+        if (!is_int($depth) || $depth < 1) {
+            throw new InvalidArgumentException(sprintf(
+                '%s.max_menu_depth for "%s" must be a whole number of 1 or more, %s given',
+                static::class,
+                $name,
+                var_export($depth, true)
+            ));
+        }
+
+        return $depth;
     }
 
 

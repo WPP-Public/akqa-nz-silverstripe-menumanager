@@ -29,7 +29,8 @@ its own fields open alongside it.
 
 * **Add menu** creates a new menu. **Delete menu** removes the open one, after a
   confirmation naming the menu and how many links go with it.
-* The **+** on a row adds a link inside it, up to three levels deep.
+* The **+** on a row adds a link inside it, up to three levels deep by default
+  (see [Limiting how deep a menu goes](#limiting-how-deep-a-menu-goes)).
 * Rows are re-ordered and nested by dragging, or from the row's own menu, which
   also offers move up, move down, indent and outdent for keyboard use.
 * Deleting a row deletes everything nested under it, after a confirmation that
@@ -150,6 +151,43 @@ Page as well the link will be overwritten by the Page you chose.
 #### IsNewWindow
 
 Can be used as a check to see if 'target="\_blank"' should be added to links.
+
+### Limiting how deep a menu goes
+
+Menus can be nested three levels deep. A design often has less room than that,
+such as a footer that only shows a heading and the links under it, so a menu can
+set its own limit with `max_menu_depth`, keyed by the menu's name:
+
+```yml
+Heyday\MenuManager\MenuSet:
+    max_menu_depth:
+        FooterMenu: 2
+        FooterBottomMenu: 1
+```
+
+The depth counts top level links as 1, so:
+
+* `1` allows top level links only.
+* `2` allows links nested under top level links, but the **+** is not offered on
+  a second level link, and nothing can be dragged or moved there.
+* `4` or more raises the limit above the default for that menu alone.
+
+A move that would push a link, or anything nested under it, past the limit is
+refused. The limit is also enforced on the server, not just hidden in the tree.
+
+Only whole numbers of 1 or more are supported. Anything else, including `0`,
+throws an `InvalidArgumentException` on `dev/build` and when the menu is opened.
+Menus left out of `max_menu_depth` keep the default, which applies to every menu
+and is set on the tree source:
+
+```yml
+Heyday\MenuManager\TreeField\MenuItemTreeSource:
+    max_depth: 3
+```
+
+Setting a limit does not change links that already sit deeper than it. They
+still show and render, but nothing more can be added below the limit, and they
+can only be moved somewhere that fits.
 
 ### Disable creating Menu Sets in the CMS
 
