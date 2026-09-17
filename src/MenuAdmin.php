@@ -124,7 +124,21 @@ class MenuAdmin extends SingleRecordAdmin
         $tree = $form->Fields()->dataFieldByName('MenuItems');
 
         if ($tree instanceof TreeField) {
-            $tree->setSelectedNodeID((string) ($this->getRequest()->getVar('MenuItemID') ?? ''));
+            $requestedMenuItemID = (string) ($this->getRequest()->getVar('MenuItemID') ?? '');
+            $selectedMenuItemID = null;
+
+            if (
+                ctype_digit($requestedMenuItemID)
+                && $this->getCurrentMenuSet()?->getAllMenuItems()->byID((int) $requestedMenuItemID)
+            ) {
+                $selectedMenuItemID = $requestedMenuItemID;
+            }
+
+            if ($tree->hasMethod('setSelectedNodeID')) {
+                $tree->setSelectedNodeID($requestedMenuItemID);
+            } elseif ($selectedMenuItemID !== null) {
+                $tree->setAttribute('data-selected-id', $selectedMenuItemID);
+            }
 
             if ($tree->hasMethod('setSelectionParam')) {
                 $tree->setSelectionParam('MenuItemID');
