@@ -253,17 +253,22 @@ class MenuVersioningTest extends SapphireTest
         $this->assertSame('New menu', MenuSet::get()->sort('ID', 'DESC')->first()->Title);
     }
 
-    public function testTheNameLocksOnceItIsSet(): void
+    public function testTheNameStaysEditableUnlessTheMenuIsADefault(): void
     {
         $set = MenuSet::create();
-        $this->assertFalse($set->getCMSFields()->dataFieldByName('Name')->isReadonly());
-
         $set->Name = 'Sidebar Menu';
         $set->write();
 
         $set = MenuSet::get()->byID($set->ID);
 
         $this->assertSame('SidebarMenu', $set->Name, 'Spaces are removed from the reference');
+        $this->assertFalse($set->getCMSFields()->dataFieldByName('Name')->isReadonly());
+
+        $set->Name = 'Aside';
+        $set->write();
+        $this->assertSame('Aside', MenuSet::get()->byID($set->ID)->Name);
+
+        Config::modify()->set(MenuSet::class, 'default_sets', ['Aside']);
         $this->assertTrue($set->getCMSFields()->dataFieldByName('Name')->isReadonly());
     }
 

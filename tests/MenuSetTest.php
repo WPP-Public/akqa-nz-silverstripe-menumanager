@@ -40,11 +40,11 @@ class MenuSetTest extends SapphireTest
 
         $this->assertInstanceOf(TreeField::class, $fields->dataFieldByName('MenuItems'));
 
-        // The name is the reference templates use, so it is readonly once the menu exists
+        // A menu the site does not require can be renamed, with a warning that templates use it
         $name = $fields->dataFieldByName('Name');
         $this->assertNotNull($name);
-        $this->assertTrue($name->isReadonly());
-        $this->assertNotEmpty($name->getDescription());
+        $this->assertFalse($name->isReadonly());
+        $this->assertStringContainsString('could break', $name->getDescription());
 
         // The editor facing title stays editable
         $this->assertInstanceOf(TextField::class, $fields->dataFieldByName('Title'));
@@ -86,6 +86,16 @@ class MenuSetTest extends SapphireTest
         $set->write();
 
         $this->assertSame('NoTitleHere', MenuSet::get()->byID($set->ID)->getTitle());
+    }
+
+    public function testADefaultMenuHasItsNameLocked(): void
+    {
+        Config::modify()->set(MenuSet::class, 'default_sets', ['Header']);
+
+        $name = $this->objFromFixture(MenuSet::class, 'header')->getCMSFields()->dataFieldByName('Name');
+
+        $this->assertTrue($name->isReadonly());
+        $this->assertStringContainsString('required by the site', $name->getDescription());
     }
 
     public function testADefaultMenuCannotBeRenamed(): void

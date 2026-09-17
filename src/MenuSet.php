@@ -570,21 +570,29 @@ class MenuSet extends DataObject implements PermissionProvider, CMSPreviewable
     {
         $field = TextField::create('Name', _t(__CLASS__ . '.DB_Name', 'Name'));
 
-        // Templates and config refer to a menu by name, so it is fixed once one has been set.
-        // Left blank, one is generated from the title when the menu is saved.
-        if ($this->isInDB() && $this->getField('Name')) {
+        // A default set is required by this site's config and templates, so its name is fixed
+        if ($this->isInDB() && $this->isDefaultSet()) {
             return $field
                 ->setDescription(_t(
                     __CLASS__ . '.DB_Name_Locked',
-                    'The reference templates use. It cannot be changed once the menu is saved.'
+                    'The reference templates use, as in $MenuSet(\'MainMenu\'). This menu is required by '
+                    . 'the site, so its name cannot be changed.'
                 ))
                 ->performReadonlyTransformation();
         }
 
+        if ($this->isInDB() && $this->getField('Name')) {
+            return $field->setDescription(_t(
+                __CLASS__ . '.DB_Name_Warning',
+                'The reference templates use, as in $MenuSet(\'MainMenu\'). Changing it could break '
+                . 'parts of the website that show this menu.'
+            ));
+        }
+
         return $field->setDescription(_t(
             __CLASS__ . '.DB_Name_Description',
-            'The reference templates use. Leave blank to generate one from the title. It cannot be '
-            . 'changed once the menu is saved.'
+            'The reference templates use, as in $MenuSet(\'MainMenu\'). Leave blank to generate '
+            . 'one from the title.'
         ));
     }
 

@@ -8,7 +8,7 @@ de:
       one: "Ein Menü"
       other: "{count} Menüs"
     DB_Name: "Name"
-    DB_Name_Description: "Dieses Feld kann nach Erstellung nicht mehr angepasst werden."
+    DB_Name_Description: "Der Verweis, den Templates verwenden. Leer lassen, um ihn aus dem Titel zu erzeugen."
     ManageMenuSets: "Menüs bearbeiten"
     AlreadyExists: 'Es existiert schon ein Menü mit dem Namen "{name}".'
   Heyday\MenuManager\MenuItem:

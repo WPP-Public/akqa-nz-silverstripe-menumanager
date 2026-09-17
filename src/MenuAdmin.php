@@ -2,6 +2,7 @@
 
 namespace Heyday\MenuManager;
 
+use Akqa\SilverStripe\TreeField\Form\TreeField;
 use SilverStripe\Admin\SingleRecordAdmin;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
@@ -117,6 +118,16 @@ class MenuAdmin extends SingleRecordAdmin
         $form->Fields()->push(
             HiddenField::create('MenuSetID')->setValue($this->currentRecordID())
         );
+
+        // ?MenuItemID= opens one link straight away, and the tree keeps it in the URL as links are
+        // selected so any link can be linked to
+        $tree = $form->Fields()->dataFieldByName('MenuItems');
+
+        if ($tree instanceof TreeField) {
+            $tree
+                ->setSelectionParam('MenuItemID')
+                ->setSelectedNodeID((string) ($this->getRequest()->getVar('MenuItemID') ?? ''));
+        }
 
         $form->addExtraClass('menu-admin');
 

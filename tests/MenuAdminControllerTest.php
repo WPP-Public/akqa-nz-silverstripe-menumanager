@@ -2,6 +2,7 @@
 
 namespace Heyday\MenuManager\Test;
 
+use Heyday\MenuManager\MenuItem;
 use Heyday\MenuManager\MenuSet;
 use Heyday\MenuManager\TreeField\MenuItemTreeSource;
 use SilverStripe\Dev\FunctionalTest;
@@ -65,6 +66,25 @@ class MenuAdminControllerTest extends FunctionalTest
         $this->assertStringContainsString('entwine-treefield', $body);
         $this->assertStringContainsString('data-schema-component="TreeField"', $body);
         $this->assertStringContainsString(MenuItemTreeSource::KEY, $body);
+    }
+
+    public function testALinkCanBeOpenedFromTheUrl(): void
+    {
+        $header = $this->objFromFixture(MenuSet::class, 'header');
+        $item = $this->objFromFixture(MenuItem::class, 'header-2');
+        $body = $this->bodyFor($this->openMenuUrl() . '&MenuItemID=' . $item->ID);
+
+        $this->assertStringContainsString('data-selected-id="' . $item->ID . '"', $body);
+        $this->assertStringContainsString('data-selection-param="MenuItemID"', $body);
+    }
+
+    public function testALinkFromAnotherMenuIsNotOpened(): void
+    {
+        $foreign = $this->objFromFixture(MenuItem::class, 'footer-item-1');
+        $body = $this->bodyFor($this->openMenuUrl() . '&MenuItemID=' . $foreign->ID);
+
+        $this->assertStringNotContainsString('data-selected-id="' . $foreign->ID . '"', $body);
+        $this->assertStringContainsString('data-selection-param="MenuItemID"', $body);
     }
 
     public function testOpeningAMenuScopesTheTreeToIt(): void
