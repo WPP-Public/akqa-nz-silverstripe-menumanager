@@ -9,35 +9,10 @@ tree hierarchy just won't do.
 composer require heyday/silverstripe-menumanager
 ```
 
-Run `dev/build` afterwards. It adds a `ParentItemID` column to `MenuItem` for
-nesting, creates the versioning tables, and publishes existing menus so the live
-site is unaffected.
-
-After completing this step, navigate in Terminal or similar to the SilverStripe
-root directory and run `composer install` or `composer update` depending on
-whether or not you have composer already in use.
+Run `sake db:build` afterwards. 
 
 ## Usage
 
-The `Menus` section opens on a grid of every menu. Each tile shows the menu's
-title, its reference name, how many links it holds, its description, and an
-orange dot when it has changes that are not published yet. Clicking a tile opens
-that menu.
-
-A menu's links are shown as a tree, and whatever is selected in that tree has
-its own fields open alongside it.
-
-* **Add menu** creates a new menu. **Delete menu** removes the open one, after a
-  confirmation naming the menu and how many links go with it.
-* The **+** on a row adds a link inside it, up to three levels deep by default
-  (see [Limiting how deep a menu goes](#limiting-how-deep-a-menu-goes)).
-* Rows are re-ordered and nested by dragging, or from the row's own menu, which
-  also offers move up, move down, indent and outdent for keyboard use.
-* Deleting a row deletes everything nested under it, after a confirmation that
-  says so.
-
-The tree is provided by [akqa/silverstripe-tree-field](https://github.com/WPP-Public/akqa-silverstripe-tree-field),
-which this module requires.
 
 ### Drafts and publishing
 
@@ -81,14 +56,6 @@ with the option to roll back to an earlier version. History needs the
 
 Anyone with `MANAGE_MENU_SETS` or `MANAGE_MENU_ITEMS` can see draft menus. That
 is configured through `non_live_permissions`.
-
-#### Upgrading an existing site
-
-Menus written before versioning have no version history, and publishing compares
-version numbers, so they would appear to publish while nothing reached the live
-site. The first `dev/build` after upgrading gives every existing menu a first
-version and publishes it, leaving the live site exactly as it was. It reports
-how many menus it published, and is safe to run again.
 
 ### Creating a MenuSet
 
