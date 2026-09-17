@@ -37,7 +37,7 @@
         show(fields.page, value === "internal");
         show(fields.link, value === "external");
         show(fields.file, value === "file");
-        show(fields.anchor, value === "internal");
+        show(fields.anchor, value === "internal" || value === "external");
 
         // Only clear when the member changes type. Syncing on load/re-render must
         // not wipe values that still belong to the saved record.

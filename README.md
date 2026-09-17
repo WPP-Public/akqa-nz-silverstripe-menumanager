@@ -103,8 +103,9 @@ A menu has two labels:
   are stripped from it on save.
 
 A new menu starts without a name, so the first thing to do on the Settings tab
-is give it one. Once a name is saved the field becomes readonly, because
-templates and configuration refer to the menu by it.
+is give it one. Menus listed under `default_sets` have a readonly name, because
+templates and configuration refer to them by it. Other menus keep their name
+editable, with a warning that changing it can break those references.
 
 A menu listed under `default_sets` cannot be deleted either, because the site
 depends on it. Its title can still be changed.
