@@ -6,6 +6,7 @@ use Akqa\SilverStripe\TreeField\Contracts\TreeNodeProvider;
 use SilverStripe\AssetAdmin\Forms\UploadField;
 use SilverStripe\Assets\File;
 use SilverStripe\CMS\Model\SiteTree;
+use SilverStripe\Control\Controller;
 use SilverStripe\Forms\CheckboxField;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\OptionsetField;
@@ -204,10 +205,13 @@ class MenuItem extends DataObject implements PermissionProvider, TreeNodeProvide
                         'Leave blank if you wish to manually specify the URL below.'
                     )
                 ),
+                // Use getField() so __get() does not fall through to Page::Link() and
+                // pre-fill this with the internal page URL when editing.
                 TextField::create(
                     'Link',
                     _t(__CLASS__ . '.DB_Link', 'URL')
-                )->setDescription(
+                )->setValue($this->getField('Link'))
+                ->setDescription(
                     _t(
                         __CLASS__ . '.DB_Link_Description',
                         'Enter a full URL to link to another website.'
@@ -351,6 +355,9 @@ class MenuItem extends DataObject implements PermissionProvider, TreeNodeProvide
         'ParentItemID',
         'MenuSetID',
         'Sort',
+        // Keep empty so the CMS URL field is not pre-filled with Page::Link().
+        // Resolved destinations go through getURL() / AbsoluteURL.
+        'Link',
     ];
 
     /**
@@ -393,18 +400,22 @@ class MenuItem extends DataObject implements PermissionProvider, TreeNodeProvide
 
 
     /**
-     * Checks to see if a page has been chosen and if so sets Link to null
-     * This means that used in conjunction with the __get method above
-     * calling $menuItem->Link won't return the Link field of this MenuItem
-     * but rather call the Link method on the associated Page
+     * Keep only the destination that matches the chosen link type.
+     *
+     * The detail form always submits PageID, Link and File together (hidden fields
+     * are still posted). Without clearing the others here, switching to "external"
+     * while a page is still selected would hit the old "PageID wins" rule and wipe
+     * the URL on save.
      */
     public function onBeforeWrite()
     {
         parent::onBeforeWrite();
 
-        if ($this->PageID != 0) {
-            $this->Link = null;
-        }
+        match ($this->resolveWriteLinkType()) {
+            'external' => $this->clearNonExternalDestination(),
+            'file' => $this->clearNonFileDestination(),
+            default => $this->clearNonInternalDestination(),
+        };
 
         if ($this->Anchor) {
             // strip out any leading #s
@@ -412,15 +423,56 @@ class MenuItem extends DataObject implements PermissionProvider, TreeNodeProvide
         }
     }
 
+    /**
+     * Link type for this write: favour the value posted by the CMS form when present.
+     */
+    private function resolveWriteLinkType(): string
+    {
+        $posted = $this->getField('LinkType');
+
+        if (!is_string($posted) || $posted === '') {
+            $controller = Controller::curr();
+            $request = $controller ? $controller->getRequest() : null;
+            $posted = $request ? (string) $request->requestVar('LinkType') : '';
+        }
+
+        if (in_array($posted, ['internal', 'external', 'file'], true)) {
+            return $posted;
+        }
+
+        return $this->getLinkType();
+    }
+
+    private function clearNonExternalDestination(): void
+    {
+        $this->PageID = 0;
+        $this->FileID = 0;
+    }
+
+    private function clearNonFileDestination(): void
+    {
+        $this->PageID = 0;
+        $this->Link = null;
+    }
+
+    private function clearNonInternalDestination(): void
+    {
+        $this->Link = null;
+        $this->FileID = 0;
+    }
+
 
     public function getLinkType(): string
     {
-        if ($this->FileID && $this->FileID > 0) {
+        // Read raw columns — __get('Link') falls through to Page::Link() when empty.
+        if ((int) $this->getField('FileID') > 0) {
             $type = 'file';
-        } elseif ($this->PageID && $this->PageID > 0 || !$this->Link || $this->Link == '/') {
+        } elseif ((int) $this->getField('PageID') > 0) {
             $type = 'internal';
-        } else {
+        } elseif (($link = (string) $this->getField('Link')) !== '' && $link !== '/') {
             $type = 'external';
+        } else {
+            $type = 'internal';
         }
 
         $this->invokeWithExtensions('updateLinkType', $type);
@@ -471,8 +523,12 @@ class MenuItem extends DataObject implements PermissionProvider, TreeNodeProvide
         } elseif ($this->FileID) {
             $link = $this->File()->getURL();
         } else {
-            $link = $this->Link;
+            // Use getField() — with Link in $no_page_fallback, a blank destination
+            // must stay blank rather than falling through to a page URL.
+            $link = $this->getField('Link');
         }
+
+        $link = (string) ($link ?? '');
 
         if ($this->Anchor) {
             $link .= '#' . $this->Anchor;
@@ -480,14 +536,14 @@ class MenuItem extends DataObject implements PermissionProvider, TreeNodeProvide
 
         $this->extend('updateURL', $link);
 
-        return $link;
+        return (string) ($link ?? '');
     }
 
 
     public function getAbsoluteURL(): string
     {
         if ($this->PageID) {
-            $link = $this->Page()->AbsoluteLink();
+            $link = (string) ($this->Page()->AbsoluteLink() ?? '');
 
             if ($this->Anchor) {
                 $link .= '#' . $this->Anchor;

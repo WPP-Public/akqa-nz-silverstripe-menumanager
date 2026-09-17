@@ -20,7 +20,7 @@
         return form.querySelector(`[id$="_${fieldName}_Holder"]`);
     };
 
-    const applyLinkType = (form, value) => {
+    const applyLinkType = (form, value, { clearOthers = false } = {}) => {
         const fields = {
             page: holderFor(form, "PageID"),
             link: holderFor(form, "Link"),
@@ -38,6 +38,41 @@
         show(fields.link, value === "external");
         show(fields.file, value === "file");
         show(fields.anchor, value === "internal");
+
+        // Only clear when the member changes type. Syncing on load/re-render must
+        // not wipe values that still belong to the saved record.
+        if (!clearOthers) {
+            return;
+        }
+
+        // Hidden fields are still posted. Clear destinations that do not belong to
+        // the chosen type so a leftover PageID cannot wipe an external URL on save.
+        if (value === "external" || value === "file") {
+            clearNamedInputs(form, "PageID");
+        }
+        if (value === "internal" || value === "file") {
+            clearNamedInputs(form, "Link");
+        }
+        if (value === "internal" || value === "external") {
+            clearNamedInputs(form, "File");
+            clearNamedInputs(form, "FileID");
+        }
+    };
+
+    const clearNamedInputs = (form, fieldName) => {
+        form.querySelectorAll(
+            `[name="${fieldName}"], [name^="${fieldName}["], [name="${fieldName}ID"], [name^="${fieldName}ID["]`
+        ).forEach((input) => {
+            if (input.type === "checkbox" || input.type === "radio") {
+                input.checked = false;
+                return;
+            }
+            if (input.value !== "") {
+                input.value = "";
+                input.dispatchEvent(new Event("change", { bubbles: true }));
+                input.dispatchEvent(new Event("input", { bubbles: true }));
+            }
+        });
     };
 
     /**
@@ -73,7 +108,9 @@
         }
 
         if (target.matches('[name="LinkType"]')) {
-            applyLinkType(target.closest("form") || document, linkTypeOf(target));
+            applyLinkType(target.closest("form") || document, linkTypeOf(target), {
+                clearOthers: true,
+            });
             return;
         }
 
