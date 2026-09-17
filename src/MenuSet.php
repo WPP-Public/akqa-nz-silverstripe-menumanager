@@ -124,9 +124,9 @@ class MenuSet extends DataObject implements PermissionProvider, CMSPreviewable
             return $result;
         }
 
-        $existing = MenuManagerTemplateProvider::getMenuSet($name);
+        $existing = $this->getMenuSetsSharingNames()->filter('Name', $name)->first();
 
-        if ($existing && $existing->ID !== $this->ID && $existing->Name === $name) {
+        if ($existing && $existing->Name === $name) {
             $result->addError(
                 _t(
                     __CLASS__ . 'AlreadyExists',
@@ -156,10 +156,62 @@ class MenuSet extends DataObject implements PermissionProvider, CMSPreviewable
 
         $this->Name = static::normaliseName($this->Name);
 
+        // Templates need a reference to find the menu by, so one is made from the title
+        if ($this->Name === '') {
+            $this->Name = $this->generateUniqueName((string) $this->getField('Title'));
+        }
+
         // A menu created before Title existed reads by its name
         if (!$this->Title && $this->Name) {
             $this->Title = $this->Name;
         }
+    }
+
+
+    /**
+     * Turn a title into a reference name, e.g. "Footer - quick links" becomes "FooterQuickLinks",
+     * adding a number when another menu already uses it.
+     */
+    public function generateUniqueName(string $title): string
+    {
+        $words = preg_split('/[^\p{L}\p{N}]+/u', $title, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $base = implode('', array_map(
+            fn (string $word) => mb_strtoupper(mb_substr($word, 0, 1)) . mb_substr($word, 1),
+            $words
+        ));
+
+        if ($base === '') {
+            $base = 'Menu';
+        }
+
+        $name = $base;
+        $existing = $this->getMenuSetsSharingNames();
+
+        // Lookups by name ignore case in most databases, so a name differing only in case would
+        // be ambiguous
+        for ($i = 2; $existing->filter('Name:nocase', $name)->exists(); $i++) {
+            $name = $base . $i;
+        }
+
+        return $name;
+    }
+
+
+    /**
+     * The other menus this one's name must be unique among. Extensions narrow it, e.g. to the
+     * menu's subsite.
+     */
+    public function getMenuSetsSharingNames(): DataList
+    {
+        $list = MenuSet::get();
+
+        if ($this->isInDB()) {
+            $list = $list->exclude('ID', $this->ID);
+        }
+
+        $this->extend('updateMenuSetsSharingNames', $list);
+
+        return $list;
     }
 
 
@@ -519,7 +571,7 @@ class MenuSet extends DataObject implements PermissionProvider, CMSPreviewable
         $field = TextField::create('Name', _t(__CLASS__ . '.DB_Name', 'Name'));
 
         // Templates and config refer to a menu by name, so it is fixed once one has been set.
-        // A menu added in the CMS starts without one, so the editor gets to choose it.
+        // Left blank, one is generated from the title when the menu is saved.
         if ($this->isInDB() && $this->getField('Name')) {
             return $field
                 ->setDescription(_t(
@@ -531,8 +583,8 @@ class MenuSet extends DataObject implements PermissionProvider, CMSPreviewable
 
         return $field->setDescription(_t(
             __CLASS__ . '.DB_Name_Description',
-            'The reference templates use. Spaces are removed, and it cannot be changed once the '
-            . 'menu is saved.'
+            'The reference templates use. Leave blank to generate one from the title. It cannot be '
+            . 'changed once the menu is saved.'
         ));
     }
 

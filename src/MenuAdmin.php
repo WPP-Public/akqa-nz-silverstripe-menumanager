@@ -286,8 +286,7 @@ class MenuAdmin extends SingleRecordAdmin
             $this->httpError(403);
         }
 
-        // No Name yet: it is the reference templates use and cannot be changed later, so the
-        // editor chooses it on the Settings tab rather than being given a generated one
+        // The Name is generated from the title on write, so the menu can be found straight away
         $set = MenuSet::create();
         $set->Title = _t(MenuSet::class . '.NEW_SET', 'New menu');
         $set->Sort = $this->getMenuSets()->count() + 1;

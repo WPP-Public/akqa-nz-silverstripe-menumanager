@@ -236,7 +236,7 @@ class MenuVersioningTest extends SapphireTest
         );
     }
 
-    public function testAddingAMenuLeavesTheNameForTheEditorToChoose(): void
+    public function testAddingAMenuGivesItAUniqueName(): void
     {
         $before = MenuSet::get()->count();
 
@@ -247,22 +247,17 @@ class MenuVersioningTest extends SapphireTest
 
         $this->assertSame($before + 2, MenuSet::get()->count());
 
-        $added = MenuSet::get()->sort('ID', 'DESC')->first();
+        $added = MenuSet::get()->sort('ID', 'DESC')->limit(2)->column('Name');
 
-        $this->assertSame('New menu', $added->Title);
-        $this->assertEmpty($added->Name, 'The reference name is chosen by the editor, not generated');
-        $this->assertFalse(
-            $added->getCMSFields()->dataFieldByName('Name')->isReadonly(),
-            'A menu without a name yet can still be named'
-        );
+        $this->assertSame(['NewMenu2', 'NewMenu'], $added);
+        $this->assertSame('New menu', MenuSet::get()->sort('ID', 'DESC')->first()->Title);
     }
 
     public function testTheNameLocksOnceItIsSet(): void
     {
-        $admin = $this->admin();
-        $admin->addMenuSet([], Form::create($admin, 'EditForm'));
+        $set = MenuSet::create();
+        $this->assertFalse($set->getCMSFields()->dataFieldByName('Name')->isReadonly());
 
-        $set = MenuSet::get()->sort('ID', 'DESC')->first();
         $set->Name = 'Sidebar Menu';
         $set->write();
 

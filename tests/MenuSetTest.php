@@ -211,6 +211,69 @@ class MenuSetTest extends SapphireTest
         $this->assertTrue($result->isValid());
     }
 
+    public function testABlankNameIsGeneratedFromTheTitle(): void
+    {
+        $set = MenuSet::create();
+        $set->Title = 'Footer - quick links!';
+        $set->write();
+
+        $this->assertSame('FooterQuickLinks', MenuSet::get()->byID($set->ID)->Name);
+    }
+
+    public function testAGeneratedNameIsUnique(): void
+    {
+        // Fixture "Header" exists, and lookups by name ignore case
+        $set = MenuSet::create();
+        $set->Title = 'header';
+        $set->write();
+
+        $this->assertSame('Header2', $set->Name);
+
+        $another = MenuSet::create();
+        $another->Title = 'Header';
+        $another->write();
+
+        $this->assertSame('Header3', $another->Name);
+    }
+
+    public function testAMenuWithoutATitleStillGetsAName(): void
+    {
+        $set = MenuSet::create();
+        $set->write();
+
+        $this->assertSame('Menu', $set->Name);
+        $this->assertSame('Menu', $set->getTitle());
+    }
+
+    public function testResavingKeepsAGeneratedName(): void
+    {
+        $set = MenuSet::create();
+        $set->Title = 'Sidebar';
+        $set->write();
+
+        $set->Title = 'Something else';
+        $set->write();
+
+        $this->assertSame('Sidebar', MenuSet::get()->byID($set->ID)->Name);
+    }
+
+    public function testNamesAreUniqueOnlyWithinTheScopeExtensionsGive(): void
+    {
+        MenuSet::add_extension(MenuSetNameScopeTestExtension::class);
+
+        try {
+            // Nothing else shares names with this menu, so the fixture's "Header" is no clash
+            $set = MenuSet::create();
+            $set->Title = 'Header';
+            $set->write();
+
+            $this->assertSame('Header', $set->Name);
+            $this->assertTrue($set->validate()->isValid());
+        } finally {
+            MenuSet::remove_extension(MenuSetNameScopeTestExtension::class);
+        }
+    }
+
     /**
      * Test validation logic without database operations
      */
