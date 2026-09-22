@@ -57,8 +57,10 @@ en:
     DB_Anchor: "Anchor"
     DB_File: "File"
     NEW_ITEM: "New menu item"
-    NewTabBadge: "New tab"
     NoLinkBadge: "No link set"
     HISTORY: "History"
     ManageMenuItems: "Manage Menu Items"
 
+  Heyday\MenuManager\TreeField\MenuItemTreeSource:
+    ADD: "Add menu item"
+    UNTITLED: "Untitled menu item"

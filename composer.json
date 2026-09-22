@@ -7,7 +7,7 @@
         "silverstripe/cms": "^6",
         "symbiote/silverstripe-gridfieldextensions": "^5",
         "silverstripe/asset-admin": "^3",
-        "akqa/silverstripe-tree-field": "^1",
+        "akqa/silverstripe-tree-field": "^1.1",
         "silverstripe/versioned": "^3",
         "silverstripe/versioned-admin": "^3"
     },

@@ -5,6 +5,8 @@ namespace Heyday\MenuManager\Test;
 use Heyday\MenuManager\MenuItem;
 use Heyday\MenuManager\MenuSet;
 use Heyday\MenuManager\TreeField\MenuItemTreeSource;
+use PHPUnit\Framework\Attributes\DataProvider;
+use SilverStripe\Control\Controller;
 use SilverStripe\Dev\FunctionalTest;
 
 /**
@@ -40,13 +42,27 @@ class MenuAdminControllerTest extends FunctionalTest
         $this->assertStringNotContainsString('entwine-treefield', $body);
     }
 
-    public function testATileLinksStraightToItsMenu(): void
+    /**
+     * Links are checked with and without trailing slashes, since a project can turn them on.
+     */
+    public static function provideTrailingSlash(): array
     {
+        return [
+            'without trailing slash' => [false],
+            'with trailing slash' => [true],
+        ];
+    }
+
+    #[DataProvider('provideTrailingSlash')]
+    public function testATileLinksStraightToItsMenu(bool $trailingSlash): void
+    {
+        Controller::config()->set('add_trailing_slash', $trailingSlash);
+
         $footer = $this->objFromFixture(MenuSet::class, 'footer');
         $body = $this->bodyFor('admin/menu-manager');
 
-        $this->assertStringContainsString(
-            'href="/admin/menu-manager?MenuSetID=' . $footer->ID . '"',
+        $this->assertMatchesRegularExpression(
+            '#href="/admin/menu-manager' . ($trailingSlash ? '/' : '') . '\?MenuSetID=' . $footer->ID . '"#',
             $body
         );
     }
@@ -99,14 +115,18 @@ class MenuAdminControllerTest extends FunctionalTest
      * The way back belongs beside the section's other crumbs in the header, not in the panel the
      * tree scrolls in.
      */
-    public function testOpeningAMenuOffersAWayBackInTheBreadcrumbs(): void
+    #[DataProvider('provideTrailingSlash')]
+    public function testOpeningAMenuOffersAWayBackInTheBreadcrumbs(bool $trailingSlash): void
     {
+        Controller::config()->set('add_trailing_slash', $trailingSlash);
+
         $header = $this->objFromFixture(MenuSet::class, 'header');
         $body = $this->bodyFor($this->openMenuUrl());
 
         // Relative, the way every other section's crumbs are, resolved by the CMS base tag
         $this->assertMatchesRegularExpression(
-            '/<a class="cms-panel-link crumb" href="\/?admin\/menu-manager">All menus<\/a>/',
+            '#<a class="cms-panel-link crumb" href="/?admin/menu-manager' . ($trailingSlash ? '/' : '')
+                . '">All menus</a>#',
             $this->breadcrumbsIn($body)
         );
 
