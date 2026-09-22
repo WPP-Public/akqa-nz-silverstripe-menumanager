@@ -3,6 +3,8 @@
 The menu management module is for creating custom menu structures when the site
 tree hierarchy just won't do.
 
+![Editing a menu in the Menu Manager admin](docs/admin-demo.webp)
+
 ## Installation
 
 ```sh
