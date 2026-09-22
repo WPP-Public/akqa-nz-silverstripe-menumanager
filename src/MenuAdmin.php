@@ -149,6 +149,11 @@ class MenuAdmin extends SingleRecordAdmin
 
         $form->addExtraClass('menu-admin');
 
+        // CMSTabSet panes stay display:none until the form is a cms-tabset (see GridFieldDetailForm_ItemRequest).
+        if ($form->Fields()->hasTabSet()) {
+            $form->addExtraClass('cms-tabset');
+        }
+
         return $form;
     }
 
