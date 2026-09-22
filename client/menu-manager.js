@@ -137,6 +137,45 @@
     });
 
     /**
+     * Post the open link back with the menu, so it is still open once the form comes back.
+     *
+     * The tree keeps the open link in the address bar rather than in the form, so copy it across
+     * as the form is sent. The CMS sends the form from a jQuery handler on the action's click,
+     * which fires no native submit event, so catch the click as well as a submit from the Enter
+     * key. Both are captured so this runs before the CMS reads the form.
+     */
+    const syncOpenMenuItem = (form) => {
+        if (!form || !form.matches || !form.matches(".menu-admin")) {
+            return;
+        }
+
+        const input = Array.from(form.elements).find(
+            (element) => element.name === "MenuItemID"
+        );
+
+        if (input) {
+            input.value =
+                new window.URL(window.location.href).searchParams.get("MenuItemID") || "";
+        }
+    };
+
+    document.addEventListener("submit", (event) => syncOpenMenuItem(event.target), true);
+
+    document.addEventListener(
+        "click",
+        (event) => {
+            const button = event.target && event.target.closest
+                ? event.target.closest('button, input[type="submit"]')
+                : null;
+
+            if (button) {
+                syncOpenMenuItem(button.form);
+            }
+        },
+        true
+    );
+
+    /**
      * Deleting a menu takes its links with it, so make sure it was meant.
      */
     document.addEventListener(

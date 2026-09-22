@@ -4,6 +4,7 @@ namespace Heyday\MenuManager\Test;
 
 use Heyday\MenuManager\MenuItem;
 use Heyday\MenuManager\MenuSet;
+use PHPUnit\Framework\Attributes\DataProvider;
 use SilverStripe\Dev\SapphireTest;
 
 /**
@@ -119,5 +120,47 @@ class MenuItemHierarchyTest extends SapphireTest
         $item->IsNewWindow = true;
 
         $this->assertSame('font-icon-external-link', $item->getTreeNodeIcon());
+    }
+
+    public static function providePhoneAndEmailLinks(): array
+    {
+        return [
+            'phone' => ['tel:+6441234567', 'font-icon-mobile'],
+            'phone, upper case' => ['TEL:0800123456', 'font-icon-mobile'],
+            'email' => ['mailto:info@example.com', 'font-icon-p-mail'],
+            'email, with spaces' => ['  mailto:info@example.com', 'font-icon-p-mail'],
+        ];
+    }
+
+    #[DataProvider('providePhoneAndEmailLinks')]
+    public function testTreeNodeIconMarksPhoneAndEmailLinks(string $link, string $icon): void
+    {
+        $item = MenuItem::create(['MenuTitle' => 'Contact', 'Link' => $link]);
+
+        $this->assertSame($icon, $item->getTreeNodeIcon());
+
+        // What the link is matters more than where it opens
+        $item->IsNewWindow = true;
+
+        $this->assertSame($icon, $item->getTreeNodeIcon());
+    }
+
+    public function testTreeNodeIconIgnoresPhoneAndEmailTextThatIsNotTheScheme(): void
+    {
+        $item = MenuItem::create([
+            'MenuTitle' => 'Contact',
+            'Link' => 'https://example.com/?next=mailto:info@example.com',
+        ]);
+
+        $this->assertNull($item->getTreeNodeIcon());
+    }
+
+    public function testOpeningInANewTabIsShownByTheIconAlone(): void
+    {
+        $item = MenuItem::create(['MenuTitle' => 'Elsewhere', 'Link' => 'https://example.com']);
+        $item->IsNewWindow = true;
+        $item->write();
+
+        $this->assertSame([], $item->getTreeNodeBadges());
     }
 }

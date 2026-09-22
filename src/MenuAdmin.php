@@ -120,11 +120,12 @@ class MenuAdmin extends SingleRecordAdmin
         );
 
         // ?MenuItemID= opens one link straight away, and the tree keeps it in the URL as links are
-        // selected so any link can be linked to
+        // selected so any link can be linked to. It is posted back with the form too, so the link
+        // stays open once the menu has been saved.
         $tree = $form->Fields()->dataFieldByName('MenuItems');
 
         if ($tree instanceof TreeField) {
-            $requestedMenuItemID = (string) ($this->getRequest()->getVar('MenuItemID') ?? '');
+            $requestedMenuItemID = (string) ($this->getRequest()->requestVar('MenuItemID') ?? '');
             $selectedMenuItemID = null;
 
             if (
@@ -145,6 +146,11 @@ class MenuAdmin extends SingleRecordAdmin
             } else {
                 $tree->setAttribute('data-selection-param', 'MenuItemID');
             }
+
+            // Kept in step with the tree's selection by menu-manager.js
+            $form->Fields()->push(
+                HiddenField::create('MenuItemID')->setValue($selectedMenuItemID)
+            );
         }
 
         $form->addExtraClass('menu-admin');
@@ -175,10 +181,10 @@ class MenuAdmin extends SingleRecordAdmin
             $this->httpError(403);
         }
 
-        // The record id travels with the form but is not data
+        // The record id and the open link travel with the form but are not data
         $saveable = array_values(array_diff(
             array_keys($form->Fields()->saveableFields()),
-            ['MenuSetID']
+            ['MenuSetID', 'MenuItemID']
         ));
 
         $form->saveInto($set, $saveable);

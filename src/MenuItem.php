@@ -291,10 +291,24 @@ class MenuItem extends DataObject implements PermissionProvider, TreeNodeProvide
         return $url !== '' ? $url : null;
     }
 
+    /**
+     * Every menu item is a link, so a plain link icon would only restate that. The exceptions are
+     * worth seeing at a glance: a phone number, an email address, and anything that opens in a
+     * new tab.
+     */
     public function getTreeNodeIcon(): ?string
     {
-        // Every menu item is a link, so an icon would only restate that. The exception is one that
-        // opens in a new tab, which is worth seeing at a glance.
+        // The raw column, so a link to a page is never mistaken for one of these
+        $link = strtolower(trim((string) $this->getField('Link')));
+
+        if (str_starts_with($link, 'tel:')) {
+            return 'font-icon-mobile';
+        }
+
+        if (str_starts_with($link, 'mailto:')) {
+            return 'font-icon-p-mail';
+        }
+
         return $this->IsNewWindow ? 'font-icon-external-link' : null;
     }
 
@@ -303,14 +317,8 @@ class MenuItem extends DataObject implements PermissionProvider, TreeNodeProvide
      */
     public function getTreeNodeBadges(): array
     {
+        // Opening in a new tab is shown by the row's icon, so it needs no badge as well
         $badges = [];
-
-        if ($this->IsNewWindow) {
-            $badges[] = [
-                'text' => _t(__CLASS__ . '.NewTabBadge', 'New tab'),
-                'type' => 'secondary',
-            ];
-        }
 
         // Read the raw columns - __get() falls back to the linked page when a field is empty,
         // which would make an item with no link of its own look like it has one
