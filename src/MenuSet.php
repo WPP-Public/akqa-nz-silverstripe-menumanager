@@ -121,6 +121,12 @@ class MenuSet extends DataObject implements PermissionProvider, CMSPreviewable
             return $result;
         }
 
+        // These rules judge the name this write sets. A saved menu whose name this write does
+        // not touch keeps it, so a name stored before these rules existed never blocks a save.
+        if ($this->isInDB() && !$this->isChanged('Name', self::CHANGE_VALUE)) {
+            return $result;
+        }
+
         // A menu listed in default_sets is referenced by name in config and in templates, so its
         // name is fixed once created
         $changed = $this->getChangedFields(true);
@@ -169,10 +175,15 @@ class MenuSet extends DataObject implements PermissionProvider, CMSPreviewable
     {
         parent::onBeforeWrite();
 
-        $this->Name = static::normaliseName($this->Name);
+        // Only a write that changes the name may reshape it. Templates find a menu by its exact
+        // name, so a write that leaves the name alone must not rename the menu.
+        if ($this->isChanged('Name', self::CHANGE_VALUE)) {
+            $this->Name = static::normaliseName($this->Name);
+        }
 
-        // Templates need a reference to find the menu by, so one is made from the title
-        if ($this->Name === '') {
+        // Templates need a reference to find the menu by, so one is made from the title. The
+        // name is read through normaliseName() because the rule above may have left it unset.
+        if (static::normaliseName($this->Name) === '') {
             $this->Name = $this->generateUniqueName((string) $this->getField('Title'));
         }
 

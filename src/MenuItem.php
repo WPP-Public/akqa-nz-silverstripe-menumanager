@@ -419,11 +419,15 @@ class MenuItem extends DataObject implements PermissionProvider, TreeNodeProvide
     {
         parent::onBeforeWrite();
 
-        match ($this->resolveWriteLinkType()) {
-            'external' => $this->clearNonExternalDestination(),
-            'file' => $this->clearNonFileDestination(),
-            default => $this->clearNonInternalDestination(),
-        };
+        // Only a write that sets a destination may clear the others. A write that leaves them
+        // alone keeps what is stored, so an item saved before this rule existed is not rewritten.
+        if ($this->isChangingDestination()) {
+            match ($this->resolveWriteLinkType()) {
+                'external' => $this->clearNonExternalDestination(),
+                'file' => $this->clearNonFileDestination(),
+                default => $this->clearNonInternalDestination(),
+            };
+        }
 
         if ($this->Anchor) {
             // strip out any leading #s
@@ -432,9 +436,25 @@ class MenuItem extends DataObject implements PermissionProvider, TreeNodeProvide
     }
 
     /**
-     * Link type for this write: favour the value posted by the CMS form when present.
+     * Whether this write sets a destination. True when one of the destination fields changed,
+     * or when the CMS form posted a link type. The form always posts one, so an editor
+     * switching to another type still clears the fields the old type used.
      */
-    private function resolveWriteLinkType(): string
+    private function isChangingDestination(): bool
+    {
+        foreach (['PageID', 'FileID', 'Link'] as $field) {
+            if ($this->isChanged($field, self::CHANGE_VALUE)) {
+                return true;
+            }
+        }
+
+        return $this->postedLinkType() !== null;
+    }
+
+    /**
+     * The link type the CMS form posted, or null when this write does not come from that form.
+     */
+    private function postedLinkType(): ?string
     {
         $posted = $this->getField('LinkType');
 
@@ -444,11 +464,15 @@ class MenuItem extends DataObject implements PermissionProvider, TreeNodeProvide
             $posted = $request ? (string) $request->requestVar('LinkType') : '';
         }
 
-        if (in_array($posted, ['internal', 'external', 'file'], true)) {
-            return $posted;
-        }
+        return in_array($posted, ['internal', 'external', 'file'], true) ? $posted : null;
+    }
 
-        return $this->getLinkType();
+    /**
+     * Link type for this write: favour the value posted by the CMS form when present.
+     */
+    private function resolveWriteLinkType(): string
+    {
+        return $this->postedLinkType() ?? $this->getLinkType();
     }
 
     private function clearNonExternalDestination(): void

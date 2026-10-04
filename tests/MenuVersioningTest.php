@@ -12,6 +12,8 @@ use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Forms\Form;
+use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\DB;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\VersionedAdmin\Forms\HistoryViewerField;
 
@@ -55,6 +57,42 @@ class MenuVersioningTest extends SapphireTest
         $set->publishRecursive();
 
         return MenuSet::get()->byID($set->ID);
+    }
+
+    private function table(string $class): string
+    {
+        return DataObject::getSchema()->baseDataTable($class);
+    }
+
+    private function setColumn(string $class, int $id, string $column, string $value): void
+    {
+        DB::prepared_query(
+            sprintf('UPDATE "%s" SET "%s" = ? WHERE "ID" = ?', $this->table($class), $column),
+            [$value, $id]
+        );
+    }
+
+    private function readColumn(string $class, int $id, string $column): ?string
+    {
+        return DB::prepared_query(
+            sprintf('SELECT "%s" FROM "%s" WHERE "ID" = ?', $column, $this->table($class)),
+            [$id]
+        )->value();
+    }
+
+    /**
+     * Put the menu tables back the way they looked before the module was versioned: rows in the
+     * base table with Version 0, no history, and nothing live.
+     */
+    private function demoteToPreVersioned(): void
+    {
+        foreach ([MenuSet::class, MenuItem::class] as $class) {
+            $table = $this->table($class);
+
+            DB::query(sprintf('UPDATE "%s" SET "Version" = 0', $table));
+            DB::query(sprintf('DELETE FROM "%s_Versions"', $table));
+            DB::query(sprintf('DELETE FROM "%s_Live"', $table));
+        }
     }
 
     public function testMenusAreVersioned(): void
@@ -303,16 +341,108 @@ class MenuVersioningTest extends SapphireTest
 
     public function testRecordsThatPreDateVersioningCanBePublished(): void
     {
-        $set = $this->header();
+        $id = $this->header()->ID;
+        $this->demoteToPreVersioned();
 
-        // Simulate a row written before the extension was applied
-        $set->ensureVersionExists();
+        $set = MenuSet::get()->byID($id);
+        $this->assertSame(0, (int) $set->getField('Version'), 'the row has no version to start with');
+        $this->assertTrue($set->ensureVersionExists());
         $this->assertGreaterThan(0, (int) $set->getField('Version'));
 
         $this->assertFalse(
             $set->ensureVersionExists(),
             'A record that already has a version is left alone'
         );
+    }
+
+    public function testABuildPublishesMenusThatPreDateVersioning(): void
+    {
+        $id = $this->header()->ID;
+        $this->demoteToPreVersioned();
+
+        MenuSet::singleton()->requireDefaultRecords();
+
+        $this->assertNotNull(
+            Versioned::get_by_stage(MenuSet::class, Versioned::LIVE)->byID($id),
+            'the build sends a menu that pre-dates versioning live'
+        );
+    }
+
+    public function testABuildKeepsTheNameOfAMenuThatPreDatesVersioning(): void
+    {
+        $id = $this->header()->ID;
+        $this->demoteToPreVersioned();
+
+        // A name the module accepted before it reshaped names on save
+        $this->setColumn(MenuSet::class, $id, 'Name', 'Site Header');
+
+        MenuSet::singleton()->requireDefaultRecords();
+
+        $this->assertSame(
+            'Site Header',
+            $this->readColumn(MenuSet::class, $id, 'Name'),
+            'a template finds a menu by its exact name, so the build must not rename it'
+        );
+    }
+
+    public function testABuildKeepsTheLinkOfALinkThatPreDatesVersioning(): void
+    {
+        // header-1 points at a page. The old form let an editor keep a URL on it as well.
+        $id = $this->objFromFixture(MenuItem::class, 'header-1')->ID;
+        $this->demoteToPreVersioned();
+        $this->setColumn(MenuItem::class, $id, 'Link', 'https://example.com/legacy');
+
+        MenuSet::singleton()->requireDefaultRecords();
+
+        $this->assertSame(
+            'https://example.com/legacy',
+            $this->readColumn(MenuItem::class, $id, 'Link'),
+            'the build must not clear a link stored alongside a page'
+        );
+    }
+
+    public function testABuildHandlesNamesThatOnlyDifferByASpace(): void
+    {
+        $header = $this->header()->ID;
+        $footer = $this->objFromFixture(MenuSet::class, 'footer')->ID;
+        $this->demoteToPreVersioned();
+
+        // Reshaping either name would collide with the other and fail validation mid-build
+        $this->setColumn(MenuSet::class, $header, 'Name', 'Footer 1');
+        $this->setColumn(MenuSet::class, $footer, 'Name', 'Footer1');
+
+        MenuSet::singleton()->requireDefaultRecords();
+
+        $live = Versioned::get_by_stage(MenuSet::class, Versioned::LIVE);
+        $this->assertNotNull($live->byID($header), 'the build completed and published both menus');
+        $this->assertNotNull($live->byID($footer));
+    }
+
+    public function testABuildHandlesALegacyNameThatMatchesADefaultSet(): void
+    {
+        Config::modify()->set(MenuSet::class, 'default_sets', ['Aside']);
+        $id = $this->header()->ID;
+        $this->demoteToPreVersioned();
+
+        // Reshaping this name would match the default set the same build has just created
+        $this->setColumn(MenuSet::class, $id, 'Name', 'A side');
+
+        MenuSet::singleton()->requireDefaultRecords();
+
+        $this->assertNotNull(
+            Versioned::get_by_stage(MenuSet::class, Versioned::LIVE)->byID($id),
+            'the build completed and published the menu it found'
+        );
+        $this->assertSame('A side', $this->readColumn(MenuSet::class, $id, 'Name'));
+    }
+
+    public function testRenamingAMenuStillReshapesTheName(): void
+    {
+        $set = $this->objFromFixture(MenuSet::class, 'footer');
+        $set->Name = 'Site Footer';
+        $set->write();
+
+        $this->assertSame('SiteFooter', MenuSet::get()->byID($set->ID)->Name);
     }
 
     public function testHistoryIsAvailableForAMenu(): void
