@@ -60,10 +60,11 @@ class MenuManagerTemplateProvider implements TemplateGlobalProvider
         $result = MenuSet::get()->filter('Name', $name);
 
         if ($result->exists() && $result->first()->hasExtension('Heyday\MenuManager\Extensions\MenuSubsiteExtension')) {
-            $result = $result->where(sprintf(
-                'SubsiteID = %s',
-                \SilverStripe\Subsites\State\SubsiteState::singleton()->getSubsiteId()
-            ));
+            // SubsiteState::getSubsiteId() is nullable; cast so CLI/tests don't build `SubsiteID = `
+            $result = $result->filter(
+                'SubsiteID',
+                (int) \SilverStripe\Subsites\State\SubsiteState::singleton()->getSubsiteId()
+            );
         }
 
         $this->extend('updateFindMenuSetByName', $result);
